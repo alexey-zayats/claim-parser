@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/config"
+	"github.com/alexey-zayats/claim-parser/internal/excel"
 	"github.com/alexey-zayats/claim-parser/internal/formstruct"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
-	"github.com/alexey-zayats/claim-parser/internal/xlsx"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
 )
@@ -24,7 +24,7 @@ type ParserParams struct {
 }
 
 func init() {
-	xlsx.Register()
+	excel.Register()
 	formstruct.Register()
 }
 

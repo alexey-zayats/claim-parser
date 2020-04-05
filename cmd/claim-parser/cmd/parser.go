@@ -26,7 +26,7 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	cfgParams := []config.Param{
-		{Name: "source", Value: "", Usage: "source type for parse: xlsx, formstruct", ViperBind: "Parser.Source"},
+		{Name: "source", Value: "", Usage: "source type for parse: excel, formstruct", ViperBind: "Parser.Source"},
 		{Name: "path", Value: "", Usage: "path to file for parse", ViperBind: "Parser.Path"},
 	}
 

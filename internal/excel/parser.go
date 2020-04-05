@@ -1,4 +1,4 @@
-package xlsx
+package excel
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type Parser struct {
 }
 
 // Name ...
-const Name = "xlsx"
+const Name = "excel"
 
 // Register ...
 func Register() {
@@ -39,12 +39,14 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 	}
 
 	sheetName := "Лист1"
+	kind := f.GetCellValue(sheetName, "B5")
+	address := f.GetCellValue(sheetName, "B7")
 
 	company := &model.Company{
 		Region:      f.GetCellValue(sheetName, "A1"),
-		Kind:        f.GetCellValue(sheetName, "B5"),
+		Kind:        strings.ReplaceAll(kind, "\n", ", "),
 		Name:        f.GetCellValue(sheetName, "B6"),
-		Address:     f.GetCellValue(sheetName, "B7"),
+		Address:     strings.ReplaceAll(address, "\n", ", "),,
 		INN:         f.GetCellValue(sheetName, "B8"),
 		Cars:        p.parseCars(f.GetCellValue(sheetName, "B12")),
 		Agreement:   f.GetCellValue(sheetName, "B13"),

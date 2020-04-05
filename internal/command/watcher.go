@@ -3,7 +3,10 @@ package command
 import (
 	"context"
 	"github.com/alexey-zayats/claim-parser/internal/config"
+	"github.com/alexey-zayats/claim-parser/internal/excel"
+	"github.com/alexey-zayats/claim-parser/internal/formstruct"
 	"github.com/alexey-zayats/claim-parser/internal/watcher"
+	"github.com/pkg/errors"
 	"go.uber.org/dig"
 )
 
@@ -20,6 +23,11 @@ type WatcherParams struct {
 	Watcher *watcher.Watcher
 }
 
+func init() {
+	excel.Register()
+	formstruct.Register()
+}
+
 // NewWatcher - конструктор команды
 func NewWatcher(params WatcherParams) Command {
 	return &Watcher{
@@ -30,6 +38,10 @@ func NewWatcher(params WatcherParams) Command {
 
 // Run - имплементация метода Run интерфейса Command
 func (cmd *Watcher) Run(ctx context.Context, args []string) error {
-	cmd.watcher.Watch(ctx)
+
+	if err := cmd.watcher.Watch(ctx); err != nil {
+		return errors.Wrap(err, "unable start watch")
+	}
+
 	return nil
 }

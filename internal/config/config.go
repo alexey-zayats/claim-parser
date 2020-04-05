@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -23,8 +24,9 @@ type Config struct {
 		}
 	}
 	Watcher struct {
-		Path struct {
-			XLSX       string
+		Workers int
+		Path    struct {
+			Excel      string
 			FormStruct string
 		}
 	}
@@ -58,9 +60,9 @@ func NewConfig() (*Config, error) {
 	logrus.SetLevel(level)
 	logrus.SetReportCaller(config.Log.Caller)
 
-	//if level == logrus.DebugLevel {
-	//	spew.Dump(config)
-	//}
+	if level == logrus.DebugLevel {
+		spew.Dump(config)
+	}
 
 	return config, nil
 }
