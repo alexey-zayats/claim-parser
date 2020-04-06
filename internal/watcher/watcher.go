@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fsnotify/fsnotify"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -102,6 +103,8 @@ func (w *Watcher) processCreateEvent(ctx context.Context, event fsnotify.Event) 
 		return
 	}
 
+	spew.Dump(event)
+
 	path := event.Name
 	name := filepath.Base(filepath.Dir(path))
 
@@ -115,5 +118,5 @@ func (w *Watcher) processCreateEvent(ctx context.Context, event fsnotify.Event) 
 		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable parse")
 	}
 
-	logrus.Debug(company)
+	spew.Dump(company)
 }
