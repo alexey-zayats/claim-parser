@@ -14,6 +14,7 @@ import (
 	"go.uber.org/dig"
 	"io/ioutil"
 	"sync"
+	"time"
 )
 
 // Watcher структура наблюдателя
@@ -103,6 +104,9 @@ func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 		return
 	}
 
+	// FIXME: проверяю отложенную обработку
+	time.Sleep(100 * time.Millisecond)
+
 	path := event.Name
 
 	data, err := ioutil.ReadFile(path)
@@ -110,6 +114,8 @@ func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable read event data")
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{"data": string(data)}).Debug("event data")
 
 	var e *model.Event
 	if err := json.Unmarshal(data, &e); err != nil {
