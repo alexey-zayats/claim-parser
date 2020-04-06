@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-REGISTRY_URL=dockereg.athletic.cloud
-STAGE=${STAGE:-dev}
+REALPATH=`realpath $0`
+DIRPATH=`dirname $REALPATH`
 
-VERSION=$(git describe)
-IMAGE=${REGISTRY_URL}/collect-proxy-${STAGE}
+cd $DIRPATH/..
+
+VERSION=`cat VERSION`
+IMAGE=aazayats/claim-parser
 
 docker build -t ${IMAGE} .
 docker tag ${IMAGE}:latest ${IMAGE}:${VERSION}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -140,6 +142,8 @@ func (p *Parser) parseCar(item string) model.Car {
 // Parse ...
 func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error) {
 
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
+
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable read file %s", path)
@@ -242,6 +246,8 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 			company.Reliability = line
 		}
 	}
+
+	spew.Dump(company)
 
 	return company, nil
 }

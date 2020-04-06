@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"github.com/jmoiron/sqlx"
 )
 
 // Transaction is an interface that models the standard transaction in
@@ -23,7 +24,7 @@ type TxFn func(Transaction) error
 
 // WithTransaction creates a new transaction and handles rollback/commit based on the
 // error object returned by the `TxFn`
-func WithTransaction(db *sql.DB, fn TxFn) (err error) {
+func WithTransaction(db *sqlx.DB, fn TxFn) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return

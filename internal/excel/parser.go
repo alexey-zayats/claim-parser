@@ -6,6 +6,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 )
@@ -32,6 +33,8 @@ func NewParser() (parser.Backend, error) {
 
 // Parse ...
 func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error) {
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
 
 	f, err := excelize.OpenFile(path)
 	if err != nil {

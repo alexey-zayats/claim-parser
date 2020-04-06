@@ -4,8 +4,8 @@ ENV GOROOT /usr/local/go
 
 RUN apk -U --no-cache add git make
 
-ADD . /src/claim-parser
-WORKDIR /src/claim-parser
+ADD . /src
+WORKDIR /src
 
 RUN make binary
 
@@ -13,8 +13,8 @@ RUN make binary
 
 FROM alpine
 
-COPY --from=builder /src/claim-parser/bin/claim-parser /app/claim-parser
-COPY build/entrypoint.sh /app/entrypoint.sh
+COPY --from=builder /src/build/entrypoint.sh /app/entrypoint.sh
+COPY --from=builder /src/bin/claim-parser /app/claim-parser
 
 RUN apk -U --no-cache add bash ca-certificates \
     && chmod +x /app/claim-parser \

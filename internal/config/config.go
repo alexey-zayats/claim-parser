@@ -25,10 +25,7 @@ type Config struct {
 	}
 	Watcher struct {
 		Workers int
-		Path    struct {
-			Excel      string
-			FormStruct string
-		}
+		Events  string
 	}
 	Parser struct {
 		Source string

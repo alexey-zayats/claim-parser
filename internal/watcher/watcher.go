@@ -2,15 +2,17 @@ package watcher
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/alexey-zayats/claim-parser/internal/config"
+	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/alexey-zayats/claim-parser/internal/services"
 	"github.com/fsnotify/fsnotify"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
-	"path/filepath"
+	"io/ioutil"
 	"sync"
 )
 
@@ -20,6 +22,7 @@ type Watcher struct {
 	db     *sqlx.DB
 	wg     *sync.WaitGroup
 	fs     *fsnotify.Watcher
+	es     *services.EventService
 }
 
 // InputParams DI наблюдателя
@@ -27,6 +30,7 @@ type InputParams struct {
 	dig.In
 	Config *config.Config
 	DB     *sqlx.DB
+	ES     *services.EventService
 }
 
 // New создат экземпляр наблюдателя
@@ -42,6 +46,7 @@ func New(params InputParams) (*Watcher, error) {
 		db:     params.DB,
 		wg:     &sync.WaitGroup{},
 		fs:     fs,
+		es:     params.ES,
 	}, nil
 }
 
@@ -53,15 +58,9 @@ func (w *Watcher) Watch(ctx context.Context) error {
 		go w.Worker(ctx, i)
 	}
 
-	logrus.Debug("start watching xlsx")
+	logrus.Debug("start watching events")
 
-	if err := w.fs.Add(w.config.Watcher.Path.Excel); err != nil {
-		return errors.Wrap(err, "unable add watch")
-	}
-
-	logrus.Debug("start watching formstruct")
-
-	if err := w.fs.Add(w.config.Watcher.Path.FormStruct); err != nil {
+	if err := w.fs.Add(w.config.Watcher.Events); err != nil {
 		return errors.Wrap(err, "unable add watch")
 	}
 
@@ -86,7 +85,7 @@ func (w *Watcher) Worker(ctx context.Context, worker int) {
 			if !ok {
 				continue
 			}
-			w.processCreateEvent(ctx, event)
+			w.processEvent(ctx, event)
 
 		case err, ok := <-w.fs.Errors:
 			if !ok {
@@ -97,26 +96,58 @@ func (w *Watcher) Worker(ctx context.Context, worker int) {
 	}
 }
 
-func (w *Watcher) processCreateEvent(ctx context.Context, event fsnotify.Event) {
+func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 
+	// we only process Create events
 	if event.Op != fsnotify.Create {
 		return
 	}
 
-	spew.Dump(event)
-
 	path := event.Name
-	name := filepath.Base(filepath.Dir(path))
 
-	b, err := parser.Instance().Backend(name)
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err, "name": name}).Error("unable get parser")
+		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable read event data")
+		return
 	}
 
-	company, err := b.Parse(ctx, path)
+	var e *model.Event
+	if err := json.Unmarshal(data, &e); err != nil {
+		logrus.WithFields(logrus.Fields{"reason": err, "data": string(data)}).Error("unable parse json")
+		return
+	}
+
+	var sourceType string
+	switch e.Source {
+	case 1:
+		sourceType = "excel"
+	case 2:
+		sourceType = "formstruct"
+	default:
+		sourceType = "unknown"
+	}
+
+	b, err := parser.Instance().Backend(sourceType)
 	if err != nil {
+		w.es.UpdateState(&model.State{
+			ID:     e.FileID,
+			Status: 1,
+			Error:  err,
+		})
+		logrus.WithFields(logrus.Fields{"reason": err, "sourceType": sourceType}).Error("unable get parser")
+		return
+	}
+
+	e.Company, err = b.Parse(ctx, e.Filepath)
+	if err != nil {
+		w.es.UpdateState(&model.State{
+			ID:     e.FileID,
+			Status: 2,
+			Error:  err,
+		})
 		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable parse")
+		return
 	}
 
-	spew.Dump(company)
+	w.es.StoreEvent(e)
 }
