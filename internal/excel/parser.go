@@ -50,7 +50,7 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 		Kind:        strings.ReplaceAll(kind, "\n", ", "),
 		Name:        f.GetCellValue(sheetName, "B6"),
 		Address:     strings.ReplaceAll(address, "\n", ", "),
-		INN:         f.GetCellValue(sheetName, "B8"),
+		INN:         strings.ReplaceAll(f.GetCellValue(sheetName, "B8"), " ", ""),
 		Cars:        p.parseCars(f.GetCellValue(sheetName, "B12")),
 		Agreement:   f.GetCellValue(sheetName, "B13"),
 		Reliability: f.GetCellValue(sheetName, "B14"),

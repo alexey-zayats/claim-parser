@@ -191,7 +191,7 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 		case StateAddress:
 			company.Address = line
 		case StateINN:
-			company.INN = line
+			company.INN = strings.ReplaceAll(line, " ", "")
 		case StateFIO:
 			fio := strings.Split(line, " ")
 
