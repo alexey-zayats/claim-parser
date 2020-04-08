@@ -167,7 +167,8 @@ func (w *Watcher) processEvent(ctx context.Context, worker int, event fsnotify.E
 	params := dict.New()
 	params.Set("path", e.Filepath)
 
-	w.events.Set(fmt.Sprintf("worker-%d", worker), e)
+	key := fmt.Sprintf("worker-%d", worker)
+	w.events.Set(key, e)
 
 	if err := b.Parse(ctx, params, w.out); err != nil {
 
@@ -203,7 +204,7 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 				e := event.(*model.Event)
 				e.Claim = claim.(*model.Claim)
 
-				logrus.WithFields(logrus.Fields{"company": e.Claim.Company.Title}).Debug("claim")
+				logrus.WithFields(logrus.Fields{"company": e.Claim.Company.Title, "district": e.District}).Debug("claim")
 
 				w.es.StoreEvent(e)
 			}
