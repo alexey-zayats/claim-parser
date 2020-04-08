@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alexey-zayats/claim-parser/internal/config"
+	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/alexey-zayats/claim-parser/internal/services"
@@ -104,7 +105,7 @@ func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 		return
 	}
 
-	// FIXME: проверяю отложенную обработку
+	// FIXME: притормозим чутка
 	time.Sleep(100 * time.Millisecond)
 
 	path := event.Name
@@ -144,7 +145,10 @@ func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 		return
 	}
 
-	e.Company, err = b.Parse(ctx, e.Filepath)
+	params := dict.New()
+	params.Set("path", e.Filepath)
+
+	iface, err := b.Parse(ctx, params)
 	if err != nil {
 		w.es.UpdateState(&model.State{
 			ID:     e.FileID,
@@ -154,6 +158,8 @@ func (w *Watcher) processEvent(ctx context.Context, event fsnotify.Event) {
 		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable parse")
 		return
 	}
+
+	e.Claim = iface.(*model.Claim)
 
 	w.es.StoreEvent(e)
 }

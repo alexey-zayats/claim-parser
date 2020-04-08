@@ -41,7 +41,6 @@ func init() {
 	}
 
 	config.Apply(rootCmd, cfgParams)
-
 	viper.AutomaticEnv()
 
 	rootCmd.PersistentFlags().StringVar(&config.File, "config", config.FilePath, "Config file")

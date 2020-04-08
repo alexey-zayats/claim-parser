@@ -2,7 +2,9 @@ package excel
 
 import (
 	"context"
+	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
@@ -32,7 +34,15 @@ func NewParser() (parser.Backend, error) {
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error) {
+func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, error) {
+
+	var path string
+
+	if iface, ok := param.Get("path"); ok {
+		path = iface.(string)
+	} else {
+		return nil, fmt.Errorf("not found 'path' in param dict")
+	}
 
 	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
 
@@ -45,20 +55,25 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 	kind := f.GetCellValue(sheetName, "B5")
 	address := f.GetCellValue(sheetName, "B7")
 
-	company := &model.Company{
-		Region:      f.GetCellValue(sheetName, "A1"),
-		Kind:        strings.ReplaceAll(kind, "\n", ", "),
-		Name:        f.GetCellValue(sheetName, "B6"),
-		Address:     strings.ReplaceAll(address, "\n", ", "),
-		INN:         strings.ReplaceAll(f.GetCellValue(sheetName, "B8"), " ", ""),
-		Cars:        p.parseCars(f.GetCellValue(sheetName, "B12")),
+	source := f.GetCellValue(sheetName, "B12")
+
+	company := &model.Claim{
+		District: f.GetCellValue(sheetName, "A1"),
+		Company: model.Company{
+			Activity: strings.ReplaceAll(kind, "\n", ", "),
+			Title:    f.GetCellValue(sheetName, "B6"),
+			Address:  strings.ReplaceAll(address, "\n", ", "),
+			INN:      strings.ReplaceAll(f.GetCellValue(sheetName, "B8"), " ", ""),
+		},
+		Cars:        p.parseCars(source),
 		Agreement:   f.GetCellValue(sheetName, "B13"),
 		Reliability: f.GetCellValue(sheetName, "B14"),
 		Reason:      nil,
 		Valid:       true,
+		Source:      source,
 	}
 
-	company.Head.Contact = model.Contact{
+	company.Company.Head.Contact = model.Contact{
 		Phone: f.GetCellValue(sheetName, "B10"),
 		EMail: f.GetCellValue(sheetName, "B11"),
 	}
@@ -70,7 +85,7 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 		reason := "Нет данных по ФИО руководителя"
 		company.Reason = &reason
 	} else {
-		company.Head.FIO = model.FIO{
+		company.Company.Head.FIO = model.FIO{
 			Surname:    fio[0],
 			Name:       fio[1],
 			Patronymic: fio[2],

@@ -6,7 +6,6 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
 )
 
@@ -29,9 +28,9 @@ func NewPassRepository(param PassRepositoryInput) interfaces.PassRepository {
 }
 
 // Create ...
-func (r *PassRepository) Create(data *model.Pass) error {
+func (r *PassRepository) Create(data *model.Pass) (int64, error) {
 
-	logrus.WithFields(logrus.Fields{"data": data}).Debug("PassRepository.Create")
+	var id int64
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -39,10 +38,10 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone," +
 			"company_ceo_email, company_lastname, company_firstname, company_patrname, " +
 			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
-			"source, district, type, number, status, file_id, created_at, created_by" +
-			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"source, district, type, number, status, file_id, created_at, created_by, bid_id" +
+			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-		_, err := t.Exec(query,
+		res, err := t.Exec(query,
 			data.CompanyBranch,
 			data.CompanyOkved,
 			data.CompanyInn,
@@ -66,11 +65,107 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			data.Status,
 			data.FileID,
 			data.CreatedAt,
-			data.CreatedBy)
+			data.CreatedBy,
+			data.RequestID)
+
+		if err != nil {
+			return errors.Wrap(err, "unable update passes")
+		}
+
+		id, err = res.LastInsertId()
+		if err != nil {
+			return errors.Wrap(err, "unable get passes lasInsertId")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, errors.Wrap(err, "transaction error")
+	}
+
+	return id, nil
+}
+
+// Update ...
+func (r *PassRepository) Update(data *model.Pass) error {
+
+	err := database.WithTransaction(r.db, func(t database.Transaction) error {
+
+		sql := "UPDATE passes SET " +
+			"company_branch = ?, company_okved = ?, company_inn = ?, company_name = ?, company_address = ?, " +
+			"company_ceo_phone = ?, company_ceo_email = ?, company_lastname = ?, company_firstname = ?, " +
+			"company_patrname = ?, employee_lastname = ?, employee_firstname = ?, employee_patrname = ?, " +
+			"employee_car = ?, employee_agree = ?, employee_confirm = ?, source = ?, district = ?, " +
+			"type = ?, number = ?, status = ?, file_id = ?, created_at = ?, created_by = ?, bid_id = ?" +
+			"WHERE id = ?"
+
+		_, err := t.Exec(sql,
+			data.CompanyBranch,
+			data.CompanyOkved,
+			data.CompanyInn,
+			data.CompanyName,
+			data.CompanyAddress,
+			data.CompanyCeoPhone,
+			data.CompanyCeoEmail,
+			data.CompanyLastname,
+			data.CompanyFirstname,
+			data.CompanyPatrname,
+			data.EmployeeLastname,
+			data.EmployeeFirstname,
+			data.EmployeePatrname,
+			data.EmployeeCar,
+			data.EmployeeAgree,
+			data.EmployeeConfirm,
+			data.Source,
+			data.District,
+			data.PassType,
+			data.PassNumber,
+			data.Status,
+			data.FileID,
+			data.CreatedAt,
+			data.CreatedBy,
+			data.ID,
+			data.RequestID)
 
 		if err != nil {
 			return errors.Wrap(err, "unable update files")
 		}
+
+		return nil
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "transaction error")
+	}
+
+	return nil
+
+}
+
+// Read ...
+func (r *PassRepository) Read(id int) (*model.Pass, error) {
+	var pass *model.Pass
+
+	err := r.db.Get(pass, "select * from passes where id=?", id)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable get passes record by id %s", id)
+	}
+
+	return pass, nil
+}
+
+// Delete ...
+func (r *PassRepository) Delete(id int) error {
+
+	err := database.WithTransaction(r.db, func(t database.Transaction) error {
+
+		sql := "DELETE FROM passes WHERE id = ?"
+		_, err := t.Exec(sql, id)
+		if err != nil {
+			return errors.Wrapf(err, "unable delete from passes by id %d", id)
+		}
+
 		return nil
 	})
 

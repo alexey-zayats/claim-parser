@@ -2,9 +2,10 @@ package formstruct
 
 import (
 	"context"
+	"fmt"
+	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -140,7 +141,14 @@ func (p *Parser) parseCar(item string) model.Car {
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error) {
+func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, error) {
+
+	var path string
+	if iface, ok := param.Get("path"); ok {
+		path = iface.(string)
+	} else {
+		return nil, fmt.Errorf("not found 'path' in param dict")
+	}
 
 	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
 
@@ -151,7 +159,7 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 
 	lines := strings.Split(string(data), "\n")
 
-	company := &model.Company{
+	claim := &model.Claim{
 		Valid: true,
 	}
 
@@ -171,7 +179,7 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 		if strings.HasPrefix(line, key1) {
 			line = strings.ReplaceAll(line, key1, "")
 			line = strings.TrimSpace(line)
-			company.Region = line
+			claim.District = line
 			continue
 		} else if strings.HasPrefix(line, key2) {
 			line = strings.ReplaceAll(line, key2, "")
@@ -185,22 +193,22 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 
 		switch state {
 		case StateKind:
-			company.Kind = line
+			claim.Company.Activity = line
 		case StateName:
-			company.Name = line
+			claim.Company.Title = line
 		case StateAddress:
-			company.Address = line
+			claim.Company.Address = line
 		case StateINN:
-			company.INN = strings.ReplaceAll(line, " ", "")
+			claim.Company.INN = strings.ReplaceAll(line, " ", "")
 		case StateFIO:
 			fio := strings.Split(line, " ")
 
 			if len(fio) < 3 {
-				company.Valid = false
+				claim.Valid = false
 				reason := "Нет данных по ФИО руководителя"
-				company.Reason = &reason
+				claim.Reason = &reason
 			} else {
-				company.Head = model.Head{
+				claim.Company.Head = model.Person{
 					FIO: model.FIO{
 						Surname:    fio[0],
 						Name:       fio[1],
@@ -209,45 +217,18 @@ func (p *Parser) Parse(ctx context.Context, path string) (*model.Company, error)
 				}
 			}
 		case StatePhone:
-			company.Head.Contact.Phone = line
+			claim.Company.Head.Contact.Phone = line
 		case StateEMail:
-			company.Head.Contact.EMail = line
+			claim.Company.Head.Contact.EMail = line
 		case StateCars:
-
-			if a := regexp.MustCompile(`(\d+\.)`).FindStringIndex(line); len(a) == 2 {
-				data := regexp.MustCompile(`(\d+\.)`).Split(line, -1)
-				for _, item := range data {
-					item = strings.TrimSpace(item)
-					if len(item) == 0 {
-						continue
-					}
-
-					company.Cars = append(company.Cars, p.parseCar(item))
-				}
-			} else if strings.Contains(line, ",") {
-				data := strings.Split(line, ",")
-				for _, item := range data {
-					item = strings.TrimSpace(item)
-					if len(item) == 0 {
-						continue
-					}
-					company.Cars = append(company.Cars, p.parseCar(item))
-				}
-			} else {
-				re0 := regexp.MustCompile(`(\d+\.|-)`)
-				line = re0.ReplaceAllString(line, "")
-
-				company.Cars = append(company.Cars, p.parseCar(line))
-			}
-
+			claim.Source = line
+			claim.Cars = ParseCars(line)
 		case StateAgreement:
-			company.Agreement = line
+			claim.Agreement = line
 		case StateReliability:
-			company.Reliability = line
+			claim.Reliability = line
 		}
 	}
 
-	spew.Dump(company)
-
-	return company, nil
+	return claim, nil
 }

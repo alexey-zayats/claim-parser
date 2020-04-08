@@ -42,5 +42,4 @@ func Apply(cmd *cobra.Command, params []Param) {
 
 		viper.SetDefault(p.ViperBind, p.Value)
 	}
-
 }

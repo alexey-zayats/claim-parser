@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
-	"github.com/alexey-zayats/claim-parser/internal/model"
 	"sort"
 	"strings"
 	"sync"
@@ -12,7 +11,7 @@ import (
 
 // Backend ...
 type Backend interface {
-	Parse(ctx context.Context, path string) (*model.Company, error)
+	Parse(ctx context.Context, param *dict.Dict) (interface{}, error)
 }
 
 // BackendInit ...

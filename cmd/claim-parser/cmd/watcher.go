@@ -11,7 +11,6 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var watcherCmd = &cobra.Command{
@@ -37,8 +36,6 @@ func init() {
 	}
 
 	config.Apply(watcherCmd, cfgParams)
-	viper.AutomaticEnv()
-	cobra.OnInitialize(config.Init)
 }
 
 func watcherMain(cmd *cobra.Command, args []string) {
@@ -46,13 +43,14 @@ func watcherMain(cmd *cobra.Command, args []string) {
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                       config.NewConfig,
-			"database.NewConnection":       database.NewConnection,
-			"repository.NewFileRepository": repository.NewFileRepository,
-			"repository.NewPassRepository": repository.NewPassRepository,
-			"services.NewEventService":     services.NewEventService,
-			"watcher.New":                  watcher.New,
-			"command.NewWatcher":           command.NewWatcher,
+			"config":                          config.NewConfig,
+			"database.NewConnection":          database.NewConnection,
+			"repository.NewFileRepository":    repository.NewFileRepository,
+			"repository.NewPassRepository":    repository.NewPassRepository,
+			"repository.NewRequestRepository": repository.NewRequestRepository,
+			"services.NewEventService":        services.NewEventService,
+			"watcher.New":                     watcher.New,
+			"command.NewWatcher":              command.NewWatcher,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {

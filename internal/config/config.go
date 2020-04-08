@@ -28,6 +28,7 @@ type Config struct {
 		Events  string
 	}
 	Parser struct {
+		Sheet  string
 		Source string
 		Path   string
 	}

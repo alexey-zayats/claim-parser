@@ -12,6 +12,7 @@ import (
 type EventService struct {
 	fileRepo interfaces.FileRepository
 	passRepo interfaces.PassRepository
+	reqRepo  interfaces.RequestRepository
 }
 
 // EventServiceInput ...
@@ -19,31 +20,54 @@ type EventServiceInput struct {
 	dig.In
 	FileRepo interfaces.FileRepository
 	PassRepo interfaces.PassRepository
+	ReqRepo  interfaces.RequestRepository
 }
 
 // NewEventService ...
-func NewEventService(param EventServiceInput) *EventService {
+func NewEventService(input EventServiceInput) *EventService {
 	return &EventService{
-		fileRepo: param.FileRepo,
-		passRepo: param.PassRepo,
+		fileRepo: input.FileRepo,
+		passRepo: input.PassRepo,
+		reqRepo:  input.ReqRepo,
 	}
 }
 
 // StoreEvent ...
 func (s *EventService) StoreEvent(e *model.Event) {
 
-	for _, car := range e.Company.Cars {
+	r := &model.Request{
+		FileID:         e.FileID,
+		Status:         0,
+		WorkflowStatus: 1,
+		Code:           e.Claim.Code,
+		District:       e.District,
+		PassType:       e.PassType,
+		CreatedAt:      time.Now(),
+		CreatedBy:      e.CreatedBy,
+		UserID:         e.CreatedBy,
+		Source:         e.Claim.Source,
+	}
+
+	id, err := s.reqRepo.Create(r)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create bids record")
+		return
+	}
+
+	r.ID = int(id)
+
+	for _, car := range e.Claim.Cars {
 		p := &model.Pass{
-			CompanyBranch:     e.Company.Kind,
+			CompanyBranch:     e.Claim.Company.Activity,
 			CompanyOkved:      "",
-			CompanyInn:        e.Company.INN,
-			CompanyName:       e.Company.Name,
-			CompanyAddress:    e.Company.Address,
-			CompanyCeoPhone:   e.Company.Head.Contact.Phone,
-			CompanyCeoEmail:   e.Company.Head.Contact.EMail,
-			CompanyLastname:   e.Company.Head.FIO.Surname,
-			CompanyFirstname:  e.Company.Head.FIO.Name,
-			CompanyPatrname:   e.Company.Head.FIO.Patronymic,
+			CompanyInn:        e.Claim.Company.INN,
+			CompanyName:       e.Claim.Company.Title,
+			CompanyAddress:    e.Claim.Company.Address,
+			CompanyCeoPhone:   e.Claim.Company.Head.Contact.Phone,
+			CompanyCeoEmail:   e.Claim.Company.Head.Contact.EMail,
+			CompanyLastname:   e.Claim.Company.Head.FIO.Surname,
+			CompanyFirstname:  e.Claim.Company.Head.FIO.Name,
+			CompanyPatrname:   e.Claim.Company.Head.FIO.Patronymic,
 			EmployeeLastname:  car.FIO.Surname,
 			EmployeeFirstname: car.FIO.Name,
 			EmployeePatrname:  car.FIO.Patronymic,
@@ -61,9 +85,13 @@ func (s *EventService) StoreEvent(e *model.Event) {
 			FileID:            e.FileID,
 			CreatedAt:         time.Now(),
 			CreatedBy:         e.CreatedBy,
+			RequestID:         r.ID,
 		}
 
-		if err := s.passRepo.Create(p); err != nil {
+		id, err := s.passRepo.Create(p)
+		if err != nil {
+
+			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create pass")
 
 			s.UpdateState(&model.State{
 				ID:     e.FileID,
@@ -71,13 +99,22 @@ func (s *EventService) StoreEvent(e *model.Event) {
 				Error:  err,
 			})
 
-			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create pass")
-
 			return
 		}
+		p.ID = int(id)
 	}
 
-	s.UpdateState(&model.State{ID: e.FileID, Status: 0, Error: nil})
+	f := &model.File{
+		ID:        e.FileID,
+		Status:    0,
+		Log:       "",
+		CreatedAt: time.Now(),
+		Source:    e.Claim.Source,
+	}
+
+	if err := s.fileRepo.Update(f); err != nil {
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update state")
+	}
 }
 
 // UpdateState ...
@@ -96,6 +133,6 @@ func (s *EventService) UpdateState(e *model.State) {
 	}
 
 	if err := s.fileRepo.Update(f); err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create pass")
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update state")
 	}
 }

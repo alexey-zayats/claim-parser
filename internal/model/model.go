@@ -1,5 +1,9 @@
 package model
 
+import (
+	"time"
+)
+
 // FIO ...
 type FIO struct {
 	Surname    string
@@ -13,8 +17,8 @@ type Contact struct {
 	Phone string
 }
 
-// Head ...
-type Head struct {
+// Person ...
+type Person struct {
 	FIO     FIO
 	Contact Contact
 }
@@ -29,15 +33,24 @@ type Car struct {
 
 // Company ...
 type Company struct {
-	Region      string
-	Kind        string
-	Name        string
-	Address     string
-	INN         string
-	Head        Head
+	Activity string
+	Title    string
+	Address  string
+	INN      string
+	Head     Person
+}
+
+// Claim ...
+type Claim struct {
+	Code        string
+	Created     time.Time
+	DistrictID  int
+	District    string
+	Company     Company
 	Cars        []Car
 	Agreement   string
 	Reliability string
 	Reason      *string
 	Valid       bool
+	Source      string
 }

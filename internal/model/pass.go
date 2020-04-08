@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // Pass ...
 type Pass struct {
@@ -40,7 +42,6 @@ type Pass struct {
 
 	// excel || fromstruct
 	Source int `db:"source"`
-
 	// Муниципальный округ
 	District int `db:"district"`
 	// Тип пропуска
@@ -57,8 +58,12 @@ type Pass struct {
 	Status int `db:"status"`
 	// ID из таблицы files файла заявки
 	FileID int `db:"file_id"`
+	// Log
+	Log string `db:"log"`
 	// Дата создания
 	CreatedAt time.Time `db:"created_at"`
 	// Пользователь
 	CreatedBy int `db:"created_by"`
+	// ID заявки
+	RequestID int `db:"bid_id"`
 }
