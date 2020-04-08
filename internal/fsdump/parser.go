@@ -33,20 +33,21 @@ func NewParser() (parser.Backend, error) {
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, error) {
+func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
 
 	var path string
+
 	if iface, ok := param.Get("path"); ok {
 		path = iface.(string)
 	} else {
-		return nil, fmt.Errorf("not found 'path' in param dict")
+		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("fsdump.Parse")
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable read file %s", path)
+		return errors.Wrapf(err, "unable read file %s", path)
 	}
 
 	head := regexp.MustCompile(`/\* \d+ createdAt:(.[^\*]+)\*/`)
@@ -59,117 +60,112 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, erro
 	var lines []string
 	var created string
 
-	var claims []*model.Claim
-
 	for _, line := range nl.Split(string(data), -1) {
 
-		line = space.ReplaceAllString(line, "")
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("canceled")
+		default:
 
-		if head.MatchString(line) {
-			inClaim = true
-			lines = make([]string, 0)
+			line = space.ReplaceAllString(line, "")
 
-			m := head.FindAllStringSubmatch(line, -1)
-			if len(m) > 0 {
-				created = fmt.Sprintf("\t\"createdAt\" : \"%s\",", m[0][1])
-			}
+			if head.MatchString(line) {
+				inClaim = true
+				lines = make([]string, 0)
 
-			continue
-		}
-
-		if len(line) == 0 {
-
-			inClaim = false
-
-			last := len(lines) - 1
-			lines = append(lines, lines[last])
-			copy(lines[3:], lines[2:last])
-			lines[2] = created
-
-			last = len(lines) - 1
-			lines[last] = strings.ReplaceAll(lines[last], ",", "")
-
-			var form Form
-			var s = strings.Join(lines, "\n")
-			if err := json.Unmarshal([]byte(s), &form); err != nil {
-				return nil, errors.Wrap(err, "unable unmarshal json")
-			}
-
-			claim := &model.Claim{
-				Code:       form.ID,
-				Created:    form.Created.Time,
-				DistrictID: Districts[form.FormID].ID,
-				District:   Districts[form.FormID].Title,
-			}
-
-			for _, f := range form.Data {
-
-				value := f.Value[0]
-
-				//fmt.Println(form.FormID)
-
-				switch Forms[form.FormID][f.FID] {
-				case formstruct.StateKind:
-					claim.Company.Activity = value
-				case formstruct.StateName:
-					claim.Company.Title = value
-				case formstruct.StateAddress:
-					claim.Company.Address = value
-				case formstruct.StateINN:
-					re := regexp.MustCompile(`\D`)
-					claim.Company.INN = re.ReplaceAllString(value, "")
-				case formstruct.StateFIO:
-					fio := strings.Split(value, " ")
-
-					if len(fio) < 3 {
-						claim.Valid = false
-						reason := "Нет данных по ФИО руководителя"
-						claim.Reason = &reason
-					} else {
-						claim.Company.Head = model.Person{
-							FIO: model.FIO{
-								Surname:    fio[0],
-								Name:       fio[1],
-								Patronymic: fio[2],
-							},
-						}
-					}
-				case formstruct.StatePhone:
-					claim.Company.Head.Contact.Phone = value
-				case formstruct.StateEMail:
-					claim.Company.Head.Contact.EMail = value
-				case formstruct.StateCars:
-					claim.Source = value
-					claim.Cars = formstruct.ParseCars(value)
-				case formstruct.StateAgreement:
-					claim.Agreement = line
-				case formstruct.StateReliability:
-					claim.Reliability = line
+				m := head.FindAllStringSubmatch(line, -1)
+				if len(m) > 0 {
+					created = fmt.Sprintf("\t\"createdAt\" : \"%s\",", m[0][1])
 				}
+
+				continue
 			}
 
-			claims = append(claims, claim)
-			continue
-		}
+			if len(line) == 0 {
 
-		if inClaim == false {
-			continue
-		}
+				inClaim = false
 
-		m := object.FindAllStringSubmatch(line, -1)
-		if len(m) > 0 {
-			line = fmt.Sprintf("\t\"_id\" : \"%s\",", m[0][1])
-		}
+				last := len(lines) - 1
+				lines = append(lines, lines[last])
+				copy(lines[3:], lines[2:last])
+				lines[2] = created
 
-		lines = append(lines, line)
+				last = len(lines) - 1
+				lines[last] = strings.ReplaceAll(lines[last], ",", "")
+
+				var form Form
+				var s = strings.Join(lines, "\n")
+				if err := json.Unmarshal([]byte(s), &form); err != nil {
+					return errors.Wrap(err, "unable unmarshal json")
+				}
+
+				claim := &model.Claim{
+					Code:       form.ID,
+					Created:    form.Created.Time,
+					DistrictID: Districts[form.FormID].ID,
+					District:   Districts[form.FormID].Title,
+				}
+
+				for _, f := range form.Data {
+
+					value := f.Value[0]
+
+					switch Forms[form.FormID][f.FID] {
+					case formstruct.StateKind:
+						claim.Company.Activity = value
+					case formstruct.StateName:
+						claim.Company.Title = value
+					case formstruct.StateAddress:
+						claim.Company.Address = value
+					case formstruct.StateINN:
+						re := regexp.MustCompile(`\D`)
+						claim.Company.INN = re.ReplaceAllString(value, "")
+					case formstruct.StateFIO:
+						fio := strings.Split(value, " ")
+
+						if len(fio) < 3 {
+							claim.Valid = false
+							reason := "Нет данных по ФИО руководителя"
+							claim.Reason = &reason
+						} else {
+							claim.Company.Head = model.Person{
+								FIO: model.FIO{
+									Surname:    fio[0],
+									Name:       fio[1],
+									Patronymic: fio[2],
+								},
+							}
+						}
+					case formstruct.StatePhone:
+						claim.Company.Head.Contact.Phone = value
+					case formstruct.StateEMail:
+						claim.Company.Head.Contact.EMail = value
+					case formstruct.StateCars:
+						claim.Source = value
+						claim.Cars = parser.ParseCars(value)
+					case formstruct.StateAgreement:
+						claim.Agreement = line
+					case formstruct.StateReliability:
+						claim.Reliability = line
+					}
+				}
+
+				out <- claim
+				continue
+			}
+
+			if inClaim == false {
+				continue
+			}
+
+			m := object.FindAllStringSubmatch(line, -1)
+			if len(m) > 0 {
+				line = fmt.Sprintf("\t\"_id\" : \"%s\",", m[0][1])
+			}
+
+			lines = append(lines, line)
+		}
 	}
 
-	return claims, nil
-}
-
-func (p *Parser) printJSON(claim *model.Claim) {
-
-	data, _ := json.MarshalIndent(claim, "", "\t")
-	fmt.Printf("%s\n", string(data))
-
+	return nil
 }

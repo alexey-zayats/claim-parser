@@ -8,6 +8,8 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"regexp"
+	"strings"
 )
 
 // Parser ...
@@ -28,41 +30,52 @@ func NewParser() (parser.Backend, error) {
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, error) {
+func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
 
 	var path string
-	var sheet string
 
 	if iface, ok := param.Get("path"); ok {
 		path = iface.(string)
 	} else {
-		return nil, fmt.Errorf("not found 'path' in param dict")
+		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	if iface, ok := param.Get("sheet"); ok {
-		sheet = iface.(string)
-	} else {
-		return nil, fmt.Errorf("not found 'sheet' in param dict")
-	}
-
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("registry.Parse")
 
 	f, err := excelize.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable open xlsx file %s", path)
+		return errors.Wrapf(err, "unable open xlsx file %s", path)
 	}
 
-	rows, err := f.Rows("Реестр красный")
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable get rows for sheet %s", sheet)
+	var sheetName string
+	for _, sheet := range f.GetSheetMap() {
+		sheetName = sheet
+		break
 	}
+
+	rows, err := f.Rows(sheetName)
+	if err != nil {
+		return errors.Wrapf(err, "unable get rows for sheet %s", sheetName)
+	}
+
+	re := regexp.MustCompile(`\s`)
+
 	for rows.Next() {
 		for i, col := range rows.Columns() {
 			if i != 4 {
-				fmt.Printf("%s\n", col)
+				continue
 			}
+
+			col = re.ReplaceAllString(col, "")
+			col = strings.ToUpper(col)
+
+			if len(col) < 6 || len(col) > 12 {
+				continue
+			}
+
+			out <- col
 		}
 	}
 
-	return nil, nil
+	return nil
 }

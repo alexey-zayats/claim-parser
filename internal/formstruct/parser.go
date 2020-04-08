@@ -72,8 +72,7 @@ func NewParser() (parser.Backend, error) {
 	}
 
 	return &Parser{
-		headers:  headers,
-		reNumber: regexp.MustCompile(`((?:\p{L}{1})\s?(?:\d{3})\s?(?:\p{L}{2})\s?(?:\d{2,3})\s?(?i:rus)?)\s?(?:.+)`),
+		headers: headers,
 	}, nil
 }
 
@@ -141,20 +140,20 @@ func (p *Parser) parseCar(item string) model.Car {
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, error) {
+func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
 
 	var path string
 	if iface, ok := param.Get("path"); ok {
 		path = iface.(string)
 	} else {
-		return nil, fmt.Errorf("not found 'path' in param dict")
+		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("Parser.Parse")
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("formstruct.Parse")
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable read file %s", path)
+		return errors.Wrapf(err, "unable read file %s", path)
 	}
 
 	lines := strings.Split(string(data), "\n")
@@ -222,7 +221,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, erro
 			claim.Company.Head.Contact.EMail = line
 		case StateCars:
 			claim.Source = line
-			claim.Cars = ParseCars(line)
+			claim.Cars = parser.ParseCars(line)
 		case StateAgreement:
 			claim.Agreement = line
 		case StateReliability:
@@ -230,5 +229,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict) (interface{}, erro
 		}
 	}
 
-	return claim, nil
+	out <- claim
+
+	return nil
 }

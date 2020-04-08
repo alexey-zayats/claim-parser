@@ -1,4 +1,4 @@
-package formstruct
+package parser
 
 import (
 	"fmt"

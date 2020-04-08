@@ -11,38 +11,37 @@ import (
 	"sync"
 )
 
-// FSDumpService ...
-type FSDumpService struct {
+// GodocService ...
+type GodocService struct {
 	passRepo interfaces.PassRepository
 	reqRepo  interfaces.RequestRepository
 }
 
-// FSdumpServiceInput ...
-type FSdumpServiceInput struct {
+// GodocServiceDI ...
+type GodocServiceDI struct {
 	dig.In
 	PassRepo interfaces.PassRepository
 	ReqRepo  interfaces.RequestRepository
 }
 
-// NewFSdumpService ...
-func NewFSdumpService(input FSdumpServiceInput) *FSDumpService {
-	return &FSDumpService{
-		reqRepo:  input.ReqRepo,
+// NewGodocService ...
+func NewGodocService(input GodocServiceDI) *GodocService {
+	return &GodocService{
 		passRepo: input.PassRepo,
+		reqRepo:  input.ReqRepo,
 	}
 }
 
 // HandleParsed ...
-func (s *FSDumpService) HandleParsed(ctx context.Context, wg sync.WaitGroup, out chan interface{}) {
+func (s *GodocService) HandleParsed(ctx context.Context, wg sync.WaitGroup, out chan interface{}) {
 	defer wg.Done()
 
 	for {
 		select {
-
 		case <-ctx.Done():
 			return
-
 		case iface := <-out:
+
 			claim := iface.(*model.Claim)
 
 			logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
@@ -52,11 +51,10 @@ func (s *FSDumpService) HandleParsed(ctx context.Context, wg sync.WaitGroup, out
 			}
 		}
 	}
-
 }
 
 // SaveClaim ...
-func (s *FSDumpService) SaveClaim(ctx context.Context, claim *model.Claim) error {
+func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error {
 
 	req := &model.Request{
 		Status:         0,

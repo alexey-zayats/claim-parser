@@ -11,7 +11,7 @@ import (
 
 // Backend ...
 type Backend interface {
-	Parse(ctx context.Context, param *dict.Dict) (interface{}, error)
+	Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error
 }
 
 // BackendInit ...

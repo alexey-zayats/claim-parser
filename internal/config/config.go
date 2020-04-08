@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -57,10 +56,6 @@ func NewConfig() (*Config, error) {
 
 	logrus.SetLevel(level)
 	logrus.SetReportCaller(config.Log.Caller)
-
-	if level == logrus.DebugLevel {
-		spew.Dump(config)
-	}
 
 	return config, nil
 }

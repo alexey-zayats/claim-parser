@@ -12,35 +12,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var resgistryCmd = &cobra.Command{
-	Use:   "registry",
-	Short: "registry",
-	Long:  "registry",
-	Run:   registryMain,
+var godocCmd = &cobra.Command{
+	Use:   "godoc",
+	Short: "godoc",
+	Long:  "godoc",
+	Run:   godocMain,
 }
 
 func init() {
-
-	parserCmd.AddCommand(resgistryCmd)
-
-	cfgParams := []config.Param{
-		{Name: "sheet", Value: "", Usage: "sheet name for parse", ViperBind: "Parser.Sheet"},
-	}
-
-	config.Apply(resgistryCmd, cfgParams)
+	parserCmd.AddCommand(godocCmd)
 }
 
-func registryMain(cmd *cobra.Command, args []string) {
+func godocMain(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                       config.NewConfig,
-			"database.NewConnection":       database.NewConnection,
-			"repository.NewPassRepository": repository.NewPassRepository,
-			"services.NewRegistryService":  services.NewRegistryService,
-			"command.NewRegistryParser":    command.NewRegistryParser,
+			"config":                          config.NewConfig,
+			"database.NewConnection":          database.NewConnection,
+			"repository.NewPassRepository":    repository.NewPassRepository,
+			"repository.NewRequestRepository": repository.NewRequestRepository,
+			"services.NewGodocService":        services.NewGodocService,
+			"command.NewGodocParser":          command.NewGodocParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {
