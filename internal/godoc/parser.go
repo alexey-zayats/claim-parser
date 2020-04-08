@@ -49,7 +49,17 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("godoc.Parse")
+	var event = &model.Event{}
+	if iface, ok := param.Get("event"); ok {
+		event = iface.(*model.Event)
+	}
+
+	claim := &model.Claim{
+		Valid: true,
+		Event: event,
+	}
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("godoc.Parse")
 
 	f, err := excelize.OpenFile(path)
 	if err != nil {
@@ -67,11 +77,9 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return errors.Wrapf(err, "unable get rows by sheet %s", sheetName)
 	}
 
-	claim := &model.Claim{
-		Valid: true,
-	}
-
 	rows.Next()
+
+	i := 1
 
 	for rows.Next() {
 
@@ -119,9 +127,12 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				}
 			}
 
+			i++
 			out <- claim
 		}
 	}
+
+	out <- nil
 
 	return nil
 }

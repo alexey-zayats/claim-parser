@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
@@ -17,6 +18,7 @@ type RegistryParser struct {
 	config *config.Config
 	svc    *services.RegistryService
 	wg     sync.WaitGroup
+	out    chan interface{}
 }
 
 // RegistryParserDI - DI параметры команды
@@ -36,6 +38,7 @@ func NewRegistryParser(di RegistryParserDI) Command {
 		config: di.Config,
 		svc:    di.Svc,
 		wg:     sync.WaitGroup{},
+		out:    make(chan interface{}),
 	}
 }
 
@@ -51,14 +54,34 @@ func (cmd *RegistryParser) Run(ctx context.Context, args []string) error {
 	params.Set("path", cmd.config.Parser.Path)
 	params.Set("sheet", "Реестр красный")
 
-	out := make(chan interface{})
-
 	cmd.wg.Add(1)
-	go cmd.svc.HandleParsed(ctx, cmd.wg, out)
+	go cmd.HandleParsed(ctx)
 
-	if err := backend.Parse(ctx, params, out); err != nil {
+	if err := backend.Parse(ctx, params, cmd.out); err != nil {
 		return errors.Wrap(err, "unable call parser.Parse ")
 	}
 
 	return nil
+}
+
+// HandleParsed ...
+func (cmd *RegistryParser) HandleParsed(ctx context.Context) {
+	defer cmd.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case iface := <-cmd.out:
+
+			switch iface.(type) {
+			case nil:
+				return
+			}
+
+			value := iface.(string)
+			fmt.Println(value)
+		}
+	}
+
 }

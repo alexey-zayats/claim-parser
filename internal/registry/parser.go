@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
+	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -40,7 +41,12 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("registry.Parse")
+	var event = &model.Event{}
+	if iface, ok := param.Get("event"); ok {
+		event = iface.(*model.Event)
+	}
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("registry.Parse")
 
 	f, err := excelize.OpenFile(path)
 	if err != nil {
@@ -76,6 +82,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			out <- col
 		}
 	}
+
+	out <- nil
 
 	return nil
 }

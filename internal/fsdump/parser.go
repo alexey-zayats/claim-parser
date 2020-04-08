@@ -43,7 +43,12 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("fsdump.Parse")
+	var event = &model.Event{}
+	if iface, ok := param.Get("event"); ok {
+		event = iface.(*model.Event)
+	}
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("fsdump.Parse")
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -57,7 +62,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 	inClaim := false
 
-	var lines []string
+	lines := make([]string, 0)
 	var created string
 
 	for _, line := range nl.Split(string(data), -1) {
@@ -71,7 +76,6 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 			if head.MatchString(line) {
 				inClaim = true
-				lines = make([]string, 0)
 
 				m := head.FindAllStringSubmatch(line, -1)
 				if len(m) > 0 {
@@ -85,70 +89,14 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 				inClaim = false
 
-				last := len(lines) - 1
-				lines = append(lines, lines[last])
-				copy(lines[3:], lines[2:last])
-				lines[2] = created
-
-				last = len(lines) - 1
-				lines[last] = strings.ReplaceAll(lines[last], ",", "")
-
-				var form Form
-				var s = strings.Join(lines, "\n")
-				if err := json.Unmarshal([]byte(s), &form); err != nil {
+				claim, err := p.makeClaim(event, created, lines)
+				if err != nil {
 					return errors.Wrap(err, "unable unmarshal json")
 				}
 
-				claim := &model.Claim{
-					Code:       form.ID,
-					Created:    form.Created.Time,
-					DistrictID: Districts[form.FormID].ID,
-					District:   Districts[form.FormID].Title,
-				}
+				logrus.WithFields(logrus.Fields{"[company]": claim.Company.Title}).Debug("claim")
 
-				for _, f := range form.Data {
-
-					value := f.Value[0]
-
-					switch Forms[form.FormID][f.FID] {
-					case formstruct.StateKind:
-						claim.Company.Activity = value
-					case formstruct.StateName:
-						claim.Company.Title = value
-					case formstruct.StateAddress:
-						claim.Company.Address = value
-					case formstruct.StateINN:
-						re := regexp.MustCompile(`\D`)
-						claim.Company.INN = re.ReplaceAllString(value, "")
-					case formstruct.StateFIO:
-						fio := strings.Split(value, " ")
-
-						if len(fio) < 3 {
-							claim.Valid = false
-							reason := "Нет данных по ФИО руководителя"
-							claim.Reason = &reason
-						} else {
-							claim.Company.Head = model.Person{
-								FIO: model.FIO{
-									Surname:    fio[0],
-									Name:       fio[1],
-									Patronymic: fio[2],
-								},
-							}
-						}
-					case formstruct.StatePhone:
-						claim.Company.Head.Contact.Phone = value
-					case formstruct.StateEMail:
-						claim.Company.Head.Contact.EMail = value
-					case formstruct.StateCars:
-						claim.Source = value
-						claim.Cars = parser.ParseCars(value)
-					case formstruct.StateAgreement:
-						claim.Agreement = line
-					case formstruct.StateReliability:
-						claim.Reliability = line
-					}
-				}
+				lines = make([]string, 0)
 
 				out <- claim
 				continue
@@ -167,5 +115,84 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		}
 	}
 
+	claim, err := p.makeClaim(event, created, lines)
+	if err != nil {
+		return errors.Wrap(err, "unable unmarshal json")
+	}
+	out <- claim
+
+	out <- nil
+
 	return nil
+}
+
+func (p *Parser) makeClaim(event *model.Event, created string, lines []string) (*model.Claim, error) {
+
+	last := len(lines) - 1
+	lines = append(lines, lines[last])
+	copy(lines[3:], lines[2:last])
+	lines[2] = created
+
+	last = len(lines) - 1
+	lines[last] = strings.ReplaceAll(lines[last], ",", "")
+
+	var form Form
+	var s = strings.Join(lines, "\n")
+	if err := json.Unmarshal([]byte(s), &form); err != nil {
+		return nil, errors.Wrap(err, "unable unmarshal json")
+	}
+
+	claim := &model.Claim{
+		Code:       form.ID,
+		Created:    form.Created.Time,
+		DistrictID: Districts[form.FormID].ID,
+		District:   Districts[form.FormID].Title,
+		Event:      event,
+	}
+
+	for _, f := range form.Data {
+
+		value := f.Value[0]
+
+		switch Forms[form.FormID][f.FID] {
+		case formstruct.StateKind:
+			claim.Company.Activity = value
+		case formstruct.StateName:
+			claim.Company.Title = value
+		case formstruct.StateAddress:
+			claim.Company.Address = value
+		case formstruct.StateINN:
+			re := regexp.MustCompile(`\D`)
+			claim.Company.INN = re.ReplaceAllString(value, "")
+		case formstruct.StateFIO:
+			fio := strings.Split(value, " ")
+
+			if len(fio) < 3 {
+				claim.Valid = false
+				reason := "Нет данных по ФИО руководителя"
+				claim.Reason = &reason
+			} else {
+				claim.Company.Head = model.Person{
+					FIO: model.FIO{
+						Surname:    fio[0],
+						Name:       fio[1],
+						Patronymic: fio[2],
+					},
+				}
+			}
+		case formstruct.StatePhone:
+			claim.Company.Head.Contact.Phone = value
+		case formstruct.StateEMail:
+			claim.Company.Head.Contact.EMail = value
+		case formstruct.StateCars:
+			claim.Source = value
+			claim.Cars = parser.ParseCars(value)
+		case formstruct.StateAgreement:
+			claim.Agreement = value
+		case formstruct.StateReliability:
+			claim.Reliability = value
+		}
+	}
+
+	return claim, nil
 }

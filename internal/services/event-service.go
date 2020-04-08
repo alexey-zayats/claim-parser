@@ -32,20 +32,22 @@ func NewEventService(input EventServiceInput) *EventService {
 	}
 }
 
-// StoreEvent ...
-func (s *EventService) StoreEvent(e *model.Event) {
+// StoreClaim ...
+func (s *EventService) StoreClaim(claim *model.Claim) {
+
+	event := claim.Event
 
 	r := &model.Request{
-		FileID:         e.FileID,
+		FileID:         event.FileID,
 		Status:         0,
 		WorkflowStatus: 1,
-		Code:           e.Claim.Code,
-		District:       e.District,
-		PassType:       e.PassType,
-		CreatedAt:      time.Now(),
-		CreatedBy:      e.CreatedBy,
-		UserID:         e.CreatedBy,
-		Source:         e.Claim.Source,
+		Code:           claim.Code,
+		District:       event.District,
+		PassType:       event.PassType,
+		CreatedAt:      claim.Created,
+		CreatedBy:      event.CreatedBy,
+		UserID:         event.CreatedBy,
+		Source:         claim.Source,
 	}
 
 	id, err := s.reqRepo.Create(r)
@@ -56,35 +58,35 @@ func (s *EventService) StoreEvent(e *model.Event) {
 
 	r.ID = int(id)
 
-	for _, car := range e.Claim.Cars {
+	for _, car := range claim.Cars {
 		p := &model.Pass{
-			CompanyBranch:     e.Claim.Company.Activity,
+			CompanyBranch:     claim.Company.Activity,
 			CompanyOkved:      "",
-			CompanyInn:        e.Claim.Company.INN,
-			CompanyName:       e.Claim.Company.Title,
-			CompanyAddress:    e.Claim.Company.Address,
-			CompanyCeoPhone:   e.Claim.Company.Head.Contact.Phone,
-			CompanyCeoEmail:   e.Claim.Company.Head.Contact.EMail,
-			CompanyLastname:   e.Claim.Company.Head.FIO.Surname,
-			CompanyFirstname:  e.Claim.Company.Head.FIO.Name,
-			CompanyPatrname:   e.Claim.Company.Head.FIO.Patronymic,
+			CompanyInn:        claim.Company.INN,
+			CompanyName:       claim.Company.Title,
+			CompanyAddress:    claim.Company.Address,
+			CompanyCeoPhone:   claim.Company.Head.Contact.Phone,
+			CompanyCeoEmail:   claim.Company.Head.Contact.EMail,
+			CompanyLastname:   claim.Company.Head.FIO.Surname,
+			CompanyFirstname:  claim.Company.Head.FIO.Name,
+			CompanyPatrname:   claim.Company.Head.FIO.Patronymic,
 			EmployeeLastname:  car.FIO.Surname,
 			EmployeeFirstname: car.FIO.Name,
 			EmployeePatrname:  car.FIO.Patronymic,
 			EmployeeCar:       car.Number,
 			EmployeeAgree:     1,
 			EmployeeConfirm:   1,
-			Source:            e.Source,
-			District:          e.District,
-			PassType:          e.PassType,
+			Source:            event.Source,
+			District:          event.District,
+			PassType:          event.PassType,
 			PassNumber:        "",
 			AlighnerPost:      "",
 			AlighnerName:      "",
 			SendType:          "",
 			Status:            0,
-			FileID:            e.FileID,
-			CreatedAt:         time.Now(),
-			CreatedBy:         e.CreatedBy,
+			FileID:            event.FileID,
+			CreatedAt:         claim.Created,
+			CreatedBy:         event.CreatedBy,
 			RequestID:         r.ID,
 		}
 
@@ -94,7 +96,7 @@ func (s *EventService) StoreEvent(e *model.Event) {
 			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create pass")
 
 			s.UpdateState(&model.State{
-				ID:     e.FileID,
+				ID:     event.FileID,
 				Status: 3,
 				Error:  err,
 			})
@@ -105,11 +107,11 @@ func (s *EventService) StoreEvent(e *model.Event) {
 	}
 
 	f := &model.File{
-		ID:        e.FileID,
+		ID:        event.FileID,
 		Status:    0,
 		Log:       "",
 		CreatedAt: time.Now(),
-		Source:    e.Claim.Source,
+		Source:    claim.Source,
 	}
 
 	if err := s.fileRepo.Update(f); err != nil {

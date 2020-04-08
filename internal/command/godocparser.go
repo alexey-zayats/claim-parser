@@ -5,9 +5,11 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/godoc"
+	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/alexey-zayats/claim-parser/internal/services"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
 	"sync"
 )
@@ -17,6 +19,7 @@ type GodocParser struct {
 	config *config.Config
 	svc    *services.GodocService
 	wg     sync.WaitGroup
+	out    chan interface{}
 }
 
 // GodocParserDI - DI параметры команды
@@ -36,6 +39,7 @@ func NewGodocParser(di GodocParserDI) Command {
 		config: di.Config,
 		svc:    di.Svc,
 		wg:     sync.WaitGroup{},
+		out:    make(chan interface{}),
 	}
 }
 
@@ -50,14 +54,38 @@ func (cmd *GodocParser) Run(ctx context.Context, args []string) error {
 	params := dict.New()
 	params.Set("path", cmd.config.Parser.Path)
 
-	out := make(chan interface{})
-
 	cmd.wg.Add(1)
-	go cmd.svc.HandleParsed(ctx, cmd.wg, out)
+	go cmd.HandleParsed(ctx)
 
-	if err := backend.Parse(ctx, params, out); err != nil {
+	if err := backend.Parse(ctx, params, cmd.out); err != nil {
 		return errors.Wrap(err, "unable call parser.Parse ")
 	}
 
 	return nil
+}
+
+// HandleParsed ...
+func (cmd *GodocParser) HandleParsed(ctx context.Context) {
+	defer cmd.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case iface := <-cmd.out:
+
+			switch iface.(type) {
+			case nil:
+				return
+			}
+
+			claim := iface.(*model.Claim)
+
+			logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
+
+			if err := cmd.svc.SaveClaim(ctx, claim); err != nil {
+				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
+			}
+		}
+	}
 }

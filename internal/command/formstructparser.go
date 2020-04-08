@@ -19,6 +19,7 @@ import (
 type FormstructParser struct {
 	config *config.Config
 	wg     sync.WaitGroup
+	out    chan interface{}
 }
 
 // FormstructParserParams - DI параметры команды
@@ -36,6 +37,7 @@ func NewFormstructParser(params FormstructParserParams) Command {
 	return &FormstructParser{
 		config: params.Config,
 		wg:     sync.WaitGroup{},
+		out:    make(chan interface{}),
 	}
 }
 
@@ -50,12 +52,10 @@ func (cmd *FormstructParser) Run(ctx context.Context, args []string) error {
 	params := dict.New()
 	params.Set("path", cmd.config.Parser.Path)
 
-	out := make(chan interface{})
-
 	cmd.wg.Add(1)
-	go cmd.HandleParsed(ctx, out)
+	go cmd.HandleParsed(ctx)
 
-	if err := backend.Parse(ctx, params, out); err != nil {
+	if err := backend.Parse(ctx, params, cmd.out); err != nil {
 		return errors.Wrap(err, "unable call parser.Parse ")
 	}
 
@@ -65,7 +65,7 @@ func (cmd *FormstructParser) Run(ctx context.Context, args []string) error {
 }
 
 // HandleParsed ...
-func (cmd *FormstructParser) HandleParsed(ctx context.Context, out chan interface{}) {
+func (cmd *FormstructParser) HandleParsed(ctx context.Context) {
 
 	defer cmd.wg.Done()
 
@@ -73,7 +73,13 @@ func (cmd *FormstructParser) HandleParsed(ctx context.Context, out chan interfac
 		select {
 		case <-ctx.Done():
 			return
-		case iface := <-out:
+		case iface := <-cmd.out:
+
+			switch iface.(type) {
+			case nil:
+				return
+			}
+
 			claim := iface.(*model.Claim)
 			data, err := json.MarshalIndent(claim, "", "\t")
 			if err != nil {
@@ -81,7 +87,6 @@ func (cmd *FormstructParser) HandleParsed(ctx context.Context, out chan interfac
 			}
 
 			fmt.Printf("%s\n", string(data))
-			return
 		}
 	}
 }

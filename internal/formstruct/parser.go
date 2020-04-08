@@ -149,7 +149,12 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("formstruct.Parse")
+	var event = &model.Event{}
+	if iface, ok := param.Get("event"); ok {
+		event = iface.(*model.Event)
+	}
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("formstruct.Parse")
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -160,6 +165,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 	claim := &model.Claim{
 		Valid: true,
+		Event: event,
 	}
 
 	state := StateInit
@@ -230,6 +236,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	}
 
 	out <- claim
+
+	out <- nil
 
 	return nil
 }

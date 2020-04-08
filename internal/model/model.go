@@ -53,4 +53,5 @@ type Claim struct {
 	Reason      *string
 	Valid       bool
 	Source      string
+	Event       *Event
 }

@@ -21,16 +21,13 @@ import (
 
 // Watcher структура наблюдателя
 type Watcher struct {
-	config *config.Config
-	db     *sqlx.DB
-	fs     *fsnotify.Watcher
-	es     *services.EventService
-	wg     sync.WaitGroup
-	pg     sync.WaitGroup
+	config       *config.Config
+	db           *sqlx.DB
+	fs           *fsnotify.Watcher
+	eventService *services.EventService
+	wg           sync.WaitGroup
 
 	out chan interface{}
-
-	events *dict.Dict
 }
 
 // InputParams DI наблюдателя
@@ -50,14 +47,12 @@ func New(params InputParams) (*Watcher, error) {
 	}
 
 	return &Watcher{
-		config: params.Config,
-		db:     params.DB,
-		fs:     fs,
-		es:     params.ES,
-		wg:     sync.WaitGroup{},
-		pg:     sync.WaitGroup{},
-		out:    make(chan interface{}),
-		events: dict.New(),
+		config:       params.Config,
+		db:           params.DB,
+		fs:           fs,
+		eventService: params.ES,
+		wg:           sync.WaitGroup{},
+		out:          make(chan interface{}, 1),
 	}, nil
 }
 
@@ -85,6 +80,7 @@ func (w *Watcher) Watch(ctx context.Context) error {
 
 // Worker ...
 func (w *Watcher) Worker(ctx context.Context, worker int) {
+
 	defer w.wg.Done()
 
 	logger := logrus.WithFields(logrus.Fields{"worker": worker})
@@ -95,50 +91,42 @@ func (w *Watcher) Worker(ctx context.Context, worker int) {
 		case <-ctx.Done():
 			logger.Debug("stop watcher.Worker")
 			return
-		case event, ok := <-w.fs.Events:
-			if !ok {
-				continue
+		case event := <-w.fs.Events:
+
+			if err := w.processEvent(ctx, event); err != nil {
+				logger.WithFields(logrus.Fields{"reason": err}).Error("unable porcess event")
 			}
 
-			w.processEvent(ctx, worker, event)
-
-		case err, ok := <-w.fs.Errors:
-			if !ok {
-				continue
-			}
+		case err := <-w.fs.Errors:
 			logger.Error(err)
 		}
 	}
 }
 
-func (w *Watcher) processEvent(ctx context.Context, worker int, event fsnotify.Event) {
+func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 
 	// we only process Create events
-	if event.Op != fsnotify.Create {
-		return
+	if e.Op != fsnotify.Create {
+		return fmt.Errorf("p.fsEvent.Op(%v) != fsnotify.Create(%v)", e.Op, fsnotify.Create)
 	}
 
 	// FIXME: притормозим чутка
 	time.Sleep(100 * time.Millisecond)
 
-	path := event.Name
-
-	data, err := ioutil.ReadFile(path)
+	data, err := ioutil.ReadFile(e.Name)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable read event data")
-		return
+		return errors.Wrapf(err, "unable read event data in path %s", e.Name)
 	}
 
 	logrus.WithFields(logrus.Fields{"data": string(data)}).Debug("event data")
 
-	var e *model.Event
-	if err := json.Unmarshal(data, &e); err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err, "data": string(data)}).Error("unable parse json")
-		return
+	var event model.Event
+	if err := json.Unmarshal(data, &event); err != nil {
+		return errors.Wrap(err, "unable parse json")
 	}
 
 	var sourceType string
-	switch e.Source {
+	switch event.Source {
 	case 1:
 		sourceType = "excel"
 	case 2:
@@ -155,34 +143,28 @@ func (w *Watcher) processEvent(ctx context.Context, worker int, event fsnotify.E
 
 	b, err := parser.Instance().Backend(sourceType)
 	if err != nil {
-		w.es.UpdateState(&model.State{
-			ID:     e.FileID,
-			Status: 1,
-			Error:  err,
-		})
-		logrus.WithFields(logrus.Fields{"reason": err, "sourceType": sourceType}).Error("unable get parser")
-		return
+		w.eventService.UpdateState(&model.State{ID: event.FileID, Status: 1, Error: err})
+		return errors.Wrap(err, "unable get parser")
 	}
 
 	params := dict.New()
-	params.Set("path", e.Filepath)
-
-	key := fmt.Sprintf("worker-%d", worker)
-	w.events.Set(key, e)
+	params.Set("path", event.Filepath)
+	params.Set("event", &event)
 
 	if err := b.Parse(ctx, params, w.out); err != nil {
 
 		state := &model.State{
-			ID:     e.FileID,
+			ID:     event.FileID,
 			Status: 2,
 			Error:  err,
 		}
 
-		w.es.UpdateState(state)
+		w.eventService.UpdateState(state)
 
-		logrus.WithFields(logrus.Fields{"reason": err, "path": path}).Error("unable parse")
-		return
+		logrus.WithFields(logrus.Fields{"reason": err, "path": e.Name}).Error("unable parse")
 	}
+
+	return nil
 }
 
 // HandleParsed ...
@@ -194,20 +176,22 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 		select {
 		case <-ctx.Done():
 			return
-		case claim := <-w.out:
+		case face := <-w.out:
 
-			key := fmt.Sprintf("worker-%d", worker)
-			if event, ok := w.events.Get(key); ok {
-
-				w.events.Delete(key)
-
-				e := event.(*model.Event)
-				e.Claim = claim.(*model.Claim)
-
-				logrus.WithFields(logrus.Fields{"company": e.Claim.Company.Title, "district": e.District}).Debug("claim")
-
-				w.es.StoreEvent(e)
+			switch face.(type) {
+			case nil:
+				continue
 			}
+
+			claim := face.(*model.Claim)
+
+			logrus.WithFields(logrus.Fields{
+				"company":  claim.Company.Title,
+				"district": claim.Event.District,
+			}).Debug("claim")
+
+			w.eventService.StoreClaim(claim)
+
 		}
 	}
 }

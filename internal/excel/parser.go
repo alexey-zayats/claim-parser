@@ -34,6 +34,10 @@ func NewParser() (parser.Backend, error) {
 // Parse ...
 func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
 
+	param.Foreach(func(s string, i interface{}) {
+		fmt.Printf("%s => %v\n", s, i)
+	})
+
 	var path string
 
 	if iface, ok := param.Get("path"); ok {
@@ -42,7 +46,12 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path}).Debug("excel.Parse")
+	var event = &model.Event{}
+	if iface, ok := param.Get("event"); ok {
+		event = iface.(*model.Event)
+	}
+
+	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("excel.Parse")
 
 	f, err := excelize.OpenFile(path)
 	if err != nil {
@@ -74,6 +83,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		Reason:      nil,
 		Valid:       true,
 		Source:      source,
+		Event:       event,
 	}
 
 	claim.Company.Head.Contact = model.Contact{
@@ -96,6 +106,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	}
 
 	out <- claim
+
+	out <- nil
 
 	return nil
 }

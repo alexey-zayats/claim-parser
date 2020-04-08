@@ -19,6 +19,7 @@ import (
 type XlsxParser struct {
 	config *config.Config
 	wg     sync.WaitGroup
+	out    chan interface{}
 }
 
 // XlsxParserParams - DI параметры команды
@@ -33,10 +34,14 @@ func init() {
 
 // NewXlsxParser - конструктор команды
 func NewXlsxParser(params XlsxParserParams) Command {
-	return &XlsxParser{
+
+	cmd := &XlsxParser{
 		config: params.Config,
 		wg:     sync.WaitGroup{},
+		out:    make(chan interface{}, 1),
 	}
+
+	return cmd
 }
 
 // Run - имплементация метода Run интерфейса Command
@@ -50,12 +55,10 @@ func (cmd *XlsxParser) Run(ctx context.Context, args []string) error {
 	params := dict.New()
 	params.Set("path", cmd.config.Parser.Path)
 
-	out := make(chan interface{})
-
 	cmd.wg.Add(1)
-	go cmd.HandleParsed(ctx, out)
+	go cmd.HandleParsed(ctx)
 
-	if err := backend.Parse(ctx, params, out); err != nil {
+	if err := backend.Parse(ctx, params, cmd.out); err != nil {
 		return errors.Wrap(err, "unable call parser.Parse ")
 	}
 
@@ -65,7 +68,7 @@ func (cmd *XlsxParser) Run(ctx context.Context, args []string) error {
 }
 
 // HandleParsed ...
-func (cmd *XlsxParser) HandleParsed(ctx context.Context, out chan interface{}) {
+func (cmd *XlsxParser) HandleParsed(ctx context.Context) {
 
 	defer cmd.wg.Done()
 
@@ -73,7 +76,13 @@ func (cmd *XlsxParser) HandleParsed(ctx context.Context, out chan interface{}) {
 		select {
 		case <-ctx.Done():
 			return
-		case iface := <-out:
+		case iface := <-cmd.out:
+
+			switch iface.(type) {
+			case nil:
+				return
+			}
+
 			claim := iface.(*model.Claim)
 			data, err := json.MarshalIndent(claim, "", "\t")
 			if err != nil {
@@ -81,7 +90,6 @@ func (cmd *XlsxParser) HandleParsed(ctx context.Context, out chan interface{}) {
 			}
 
 			fmt.Printf("%s\n", string(data))
-			return
 		}
 	}
 }

@@ -6,9 +6,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
-	"sync"
 )
 
 // FSDumpService ...
@@ -30,29 +28,6 @@ func NewFSdumpService(input FSdumpServiceInput) *FSDumpService {
 		reqRepo:  input.ReqRepo,
 		passRepo: input.PassRepo,
 	}
-}
-
-// HandleParsed ...
-func (s *FSDumpService) HandleParsed(ctx context.Context, wg sync.WaitGroup, out chan interface{}) {
-	defer wg.Done()
-
-	for {
-		select {
-
-		case <-ctx.Done():
-			return
-
-		case iface := <-out:
-			claim := iface.(*model.Claim)
-
-			logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
-
-			if err := s.SaveClaim(ctx, claim); err != nil {
-				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
-			}
-		}
-	}
-
 }
 
 // SaveClaim ...

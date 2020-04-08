@@ -8,7 +8,6 @@ type Event struct {
 	PassType  int    `json:"type"`
 	District  int    `json:"district"`
 	FileID    int    `json:"file_id"`
-	Claim     *Claim `json:"omitempty"`
 }
 
 // State ...
