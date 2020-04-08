@@ -195,7 +195,11 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 			return
 		case claim := <-w.out:
 
-			if event, ok := w.events.Get(fmt.Sprintf("worker-%d", worker)); ok {
+			key := fmt.Sprintf("worker-%d", worker)
+			if event, ok := w.events.Get(key); ok {
+
+				w.events.Delete(key)
+
 				e := event.(*model.Event)
 				e.Claim = claim.(*model.Claim)
 
