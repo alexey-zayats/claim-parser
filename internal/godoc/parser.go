@@ -89,6 +89,11 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		default:
 
 			for i, value := range rows.Columns() {
+
+				if value == "" {
+					break
+				}
+
 				switch i {
 				case 0:
 					claim.Created = excelDateToDate(value)
