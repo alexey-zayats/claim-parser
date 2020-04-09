@@ -9,24 +9,24 @@ import (
 
 // ClaimService ...
 type ClaimService struct {
-	bidSvc  *BidService
-	passSvc *PassService
+	bidSvc    *BidService
+	passSvc   *PassService
 	issuedSvc *IssuedService
 }
 
 // ClaimServiceDI ...
 type ClaimServiceDI struct {
 	dig.In
-	BidSvc  *BidService
-	PassSvc *PassService
+	BidSvc    *BidService
+	PassSvc   *PassService
 	IssuedSvc *IssuedService
 }
 
 // NewClaimService ...
 func NewClaimService(di ClaimServiceDI) *ClaimService {
 	return &ClaimService{
-		bidSvc:  di.BidSvc,
-		passSvc: di.PassSvc,
+		bidSvc:    di.BidSvc,
+		passSvc:   di.PassSvc,
 		issuedSvc: di.IssuedSvc,
 	}
 }

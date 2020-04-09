@@ -136,7 +136,7 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 	case 4:
 		sourceType = "godoc"
 	case 5:
-		sourceType = "registry"
+		sourceType = "issued"
 	default:
 		sourceType = "unknown"
 	}

@@ -43,20 +43,20 @@ func watcherMain(cmd *cobra.Command, args []string) {
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                       config.NewConfig,
-			"database.NewConnection":       database.NewConnection,
-			"repository.NewFileRepository": repository.NewFileRepository,
-			"repository.NewPassRepository": repository.NewPassRepository,
-			"repository.NewBidRepository":  repository.NewBidRepository,
+			"config":                         config.NewConfig,
+			"database.NewConnection":         database.NewConnection,
+			"repository.NewFileRepository":   repository.NewFileRepository,
+			"repository.NewPassRepository":   repository.NewPassRepository,
+			"repository.NewBidRepository":    repository.NewBidRepository,
 			"repository.NewIssuedRepository": repository.NewIssuedRepository,
-			"service.NewPassService":       services.NewPassService,
-			"service.NewBidService":        services.NewBidService,
-			"service.NewFileService":       services.NewFileService,
+			"service.NewPassService":         services.NewPassService,
+			"service.NewBidService":          services.NewBidService,
+			"service.NewFileService":         services.NewFileService,
 			"services.NewIssuedService":      services.NewIssuedService,
-			"services.NewClaimService":     services.NewClaimService,
-			"services.NewEventService":     services.NewEventService,
-			"watcher.New":                  watcher.New,
-			"command.NewWatcher":           command.NewWatcher,
+			"services.NewClaimService":       services.NewClaimService,
+			"services.NewEventService":       services.NewEventService,
+			"watcher.New":                    watcher.New,
+			"command.NewWatcher":             command.NewWatcher,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {

@@ -29,16 +29,16 @@ func fsdumpMain(cmd *cobra.Command, args []string) {
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                       config.NewConfig,
-			"database.NewConnection":       database.NewConnection,
-			"repository.NewPassRepository": repository.NewPassRepository,
-			"repository.NewBidRepository":  repository.NewBidRepository,
-			"repository.NewIssuedRepository":  repository.NewIssuedRepository,
-			"service.NewPassService":       services.NewPassService,
-			"service.NewBidService":        services.NewBidService,
-			"services.NewClaimService":     services.NewClaimService,
-			"services.NewIssuedService":    services.NewIssuedService,
-			"command.NewParser":            command.NewFsdumpParser,
+			"config":                         config.NewConfig,
+			"database.NewConnection":         database.NewConnection,
+			"repository.NewPassRepository":   repository.NewPassRepository,
+			"repository.NewBidRepository":    repository.NewBidRepository,
+			"repository.NewIssuedRepository": repository.NewIssuedRepository,
+			"service.NewPassService":         services.NewPassService,
+			"service.NewBidService":          services.NewBidService,
+			"services.NewClaimService":       services.NewClaimService,
+			"services.NewIssuedService":      services.NewIssuedService,
+			"command.NewParser":              command.NewFsdumpParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {

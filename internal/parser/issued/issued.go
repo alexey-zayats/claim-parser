@@ -74,21 +74,6 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	numStyle, _ := f.NewStyle(`{"number_format":1}`)
 	dateStyle, _ := f.NewStyle(`{"custom_number_format": "m.d.yyyy h:mm:ss"}`)
 
-	/*
-		CompanyInn string
-		CompanyOgrn string
-		CompanyName string
-		CompanyFio string
-		CompanyCar string
-		LegalBasement string
-		PassNumber string
-		District string
-		PassType int
-		IssuedAt time.Time
-		RegistryNumber string
-		Shipping int
-	*/
-
 	re := regexp.MustCompile(`^(.+)(?:,|;)\s?(\p{L}?\s?\d+)$`)
 
 	for rows.Next() {
