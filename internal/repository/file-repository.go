@@ -28,9 +28,7 @@ func NewFileRepository(param FilesRepositoryInput) interfaces.FileRepository {
 }
 
 // Create ...
-func (r *FileRepository) Create(data *model.File) (int64, error) {
-
-	var id int64
+func (r *FileRepository) Create(data *model.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -41,7 +39,7 @@ func (r *FileRepository) Create(data *model.File) (int64, error) {
 			return errors.Wrap(err, "unable update files")
 		}
 
-		id, err = res.LastInsertId()
+		data.ID, err = res.LastInsertId()
 		if err != nil {
 			return errors.Wrap(err, "unable get files lastInsertID")
 		}
@@ -50,14 +48,14 @@ func (r *FileRepository) Create(data *model.File) (int64, error) {
 	})
 
 	if err != nil {
-		return 0, errors.Wrap(err, "transaction error")
+		return errors.Wrap(err, "transaction error")
 	}
 
-	return id, nil
+	return nil
 }
 
-// Update ...
-func (r *FileRepository) Update(data *model.File) error {
+// UpdateState ...
+func (r *FileRepository) UpdateState(data *model.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -77,7 +75,7 @@ func (r *FileRepository) Update(data *model.File) error {
 }
 
 // Read ...
-func (r *FileRepository) Read(id int) (*model.File, error) {
+func (r *FileRepository) Read(id int64) (*model.File, error) {
 	var file *model.File
 
 	err := r.db.Get(file, "select * from files where id=?", id)
@@ -89,7 +87,7 @@ func (r *FileRepository) Read(id int) (*model.File, error) {
 }
 
 // Delete ...
-func (r *FileRepository) Delete(id int) error {
+func (r *FileRepository) Delete(id int64) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 

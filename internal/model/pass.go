@@ -6,7 +6,7 @@ import (
 
 // Pass ...
 type Pass struct {
-	ID int `db:"id"`
+	ID int64 `db:"id"`
 	// Вид деятельности
 	CompanyBranch string `db:"company_branch"`
 	// Код ОКВЭД
@@ -43,7 +43,7 @@ type Pass struct {
 	// excel || fromstruct
 	Source int `db:"source"`
 	// Муниципальный округ
-	District int `db:"district"`
+	District int64 `db:"district"`
 	// Тип пропуска
 	PassType int `db:"type"`
 	// Номер пропуска
@@ -57,13 +57,13 @@ type Pass struct {
 	// Статус
 	Status int `db:"status"`
 	// ID из таблицы files файла заявки
-	FileID int `db:"file_id"`
+	FileID int64 `db:"file_id"`
 	// Log
 	Log string `db:"log"`
 	// Дата создания
 	CreatedAt time.Time `db:"created_at"`
 	// Пользователь
-	CreatedBy int `db:"created_by"`
+	CreatedBy int64 `db:"created_by"`
 	// ID заявки
-	BidID int `db:"bid_id"`
+	BidID int64 `db:"bid_id"`
 }

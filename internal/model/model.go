@@ -44,7 +44,7 @@ type Company struct {
 type Claim struct {
 	Code        string
 	Created     time.Time
-	DistrictID  int
+	DistrictID  int64
 	District    string
 	Company     Company
 	Cars        []Car

@@ -1,24 +1,26 @@
 package services
 
 import (
-	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"go.uber.org/dig"
 )
 
 // RegistryService ...
 type RegistryService struct {
-	passRepo interfaces.PassRepository
+	passSvc *PassService
+	bidSvc  *BidService
 }
 
 // RegistryServiceDI ...
 type RegistryServiceDI struct {
 	dig.In
-	PassRepo interfaces.PassRepository
+	PassSvc *PassService
+	BidSvc  *BidService
 }
 
 // NewRegistryService ...
-func NewRegistryService(input RegistryServiceDI) *RegistryService {
+func NewRegistryService(di RegistryServiceDI) *RegistryService {
 	return &RegistryService{
-		passRepo: input.PassRepo,
+		passSvc: di.PassSvc,
+		bidSvc:  di.BidSvc,
 	}
 }

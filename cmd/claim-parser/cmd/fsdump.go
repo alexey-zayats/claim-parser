@@ -33,6 +33,8 @@ func fsdumpMain(cmd *cobra.Command, args []string) {
 			"database.NewConnection":       database.NewConnection,
 			"repository.NewPassRepository": repository.NewPassRepository,
 			"repository.NewBidRepository":  repository.NewBidRepository,
+			"service.NewPassService":       services.NewPassService,
+			"service.NewBidService":        services.NewBidService,
 			"services.NewFSdumpService":    services.NewFSdumpService,
 			"command.NewParser":            command.NewFSdumpParser,
 		},

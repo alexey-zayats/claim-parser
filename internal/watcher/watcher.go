@@ -143,7 +143,7 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 
 	b, err := parser.Instance().Backend(sourceType)
 	if err != nil {
-		w.eventService.UpdateState(&model.State{ID: event.FileID, Status: 1, Error: err})
+		w.eventService.UpdateFile(event.FileID, 1, err.Error(), sourceType)
 		return errors.Wrap(err, "unable get parser")
 	}
 
@@ -152,15 +152,7 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 	params.Set("event", &event)
 
 	if err := b.Parse(ctx, params, w.out); err != nil {
-
-		state := &model.State{
-			ID:     event.FileID,
-			Status: 2,
-			Error:  err,
-		}
-
-		w.eventService.UpdateState(state)
-
+		w.eventService.UpdateFile(event.FileID, 2, err.Error(), sourceType)
 		logrus.WithFields(logrus.Fields{"reason": err, "path": e.Name}).Error("unable parse")
 	}
 

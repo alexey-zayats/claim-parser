@@ -28,9 +28,7 @@ func NewBidRepository(param BidRepositoryInput) interfaces.BidRepository {
 }
 
 // Create ...
-func (r *BidRepository) Create(data *model.Bid) (int64, error) {
-
-	var id int64
+func (r *BidRepository) Create(data *model.Bid) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -53,7 +51,7 @@ func (r *BidRepository) Create(data *model.Bid) (int64, error) {
 			return errors.Wrap(err, "unable create bid")
 		}
 
-		id, err = res.LastInsertId()
+		data.ID, err = res.LastInsertId()
 		if err != nil {
 			return errors.Wrap(err, "unable get bid bids lastInsertID")
 		}
@@ -62,10 +60,10 @@ func (r *BidRepository) Create(data *model.Bid) (int64, error) {
 	})
 
 	if err != nil {
-		return 0, errors.Wrap(err, "transaction error")
+		return errors.Wrap(err, "transaction error")
 	}
 
-	return id, nil
+	return nil
 }
 
 // Update ...
@@ -102,7 +100,7 @@ func (r *BidRepository) Update(data *model.Bid) error {
 }
 
 // Read ...
-func (r *BidRepository) Read(id int) (*model.Bid, error) {
+func (r *BidRepository) Read(id int64) (*model.Bid, error) {
 	var request *model.Bid
 
 	err := r.db.Get(request, "select * from bids where id=?", id)
@@ -114,7 +112,7 @@ func (r *BidRepository) Read(id int) (*model.Bid, error) {
 }
 
 // Delete ...
-func (r *BidRepository) Delete(id int) error {
+func (r *BidRepository) Delete(id int64) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 

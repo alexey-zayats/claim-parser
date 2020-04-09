@@ -18,6 +18,6 @@ CREATE TABLE issued(
     KEY issued_ogrn_idx (company_ogrn),
     KEY issued_pass_number_idx (pass_number),
     KEY issued_car_number_idx (company_car),
-    CONSTRAINT issued_district_id_fk FOREIGN KEY (district_id) REFERENCES distrcits (id),
+    CONSTRAINT issued_district_id_fk FOREIGN KEY (district_id) REFERENCES districts (id),
     CONSTRAINT issued_created_fk FOREIGN KEY (created_by) REFERENCES users (id)
 ) ENGINE=InnoDB COMMENT 'Выданные пропуска';

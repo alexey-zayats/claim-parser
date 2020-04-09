@@ -1,10 +1,10 @@
 package fsdump
 
-import "github.com/alexey-zayats/claim-parser/internal/formstruct"
+import "github.com/alexey-zayats/claim-parser/internal/parser/formstruct"
 
 // District ...
 type District struct {
-	ID    int
+	ID    int64
 	Title string
 }
 

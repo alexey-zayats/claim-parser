@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -11,22 +10,22 @@ import (
 
 // GodocService ...
 type GodocService struct {
-	passRepo interfaces.PassRepository
-	reqRepo  interfaces.BidRepository
+	bidSvc  *BidService
+	passSvc *PassService
 }
 
 // GodocServiceDI ...
 type GodocServiceDI struct {
 	dig.In
-	PassRepo interfaces.PassRepository
-	ReqRepo  interfaces.BidRepository
+	BidSvc  *BidService
+	PassSvc *PassService
 }
 
 // NewGodocService ...
 func NewGodocService(input GodocServiceDI) *GodocService {
 	return &GodocService{
-		passRepo: input.PassRepo,
-		reqRepo:  input.ReqRepo,
+		bidSvc:  input.BidSvc,
+		passSvc: input.PassSvc,
 	}
 }
 
@@ -41,11 +40,9 @@ func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error 
 		Source:         claim.Source,
 	}
 
-	id, err := s.reqRepo.Create(bid)
-	if err != nil {
+	if err := s.bidSvc.Create(bid); err != nil {
 		return errors.Wrap(err, "unable create bid")
 	}
-	bid.ID = int(id)
 
 	for _, car := range claim.Cars {
 
@@ -78,11 +75,9 @@ func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error 
 				BidID:             bid.ID,
 			}
 
-			id, err = s.passRepo.Create(pass)
-			if err != nil {
+			if err := s.passSvc.Create(pass); err != nil {
 				return errors.Wrap(err, "unable create pass")
 			}
-			pass.ID = int(id)
 		}
 	}
 

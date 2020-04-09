@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
@@ -10,25 +9,25 @@ import (
 
 // EventService ...
 type EventService struct {
-	fileRepo interfaces.FileRepository
-	passRepo interfaces.PassRepository
-	reqRepo  interfaces.BidRepository
+	bidSvc  *BidService
+	fileSvc *FileService
+	passSvc *PassService
 }
 
-// EventServiceInput ...
-type EventServiceInput struct {
+// EventServiceDI ...
+type EventServiceDI struct {
 	dig.In
-	FileRepo interfaces.FileRepository
-	PassRepo interfaces.PassRepository
-	ReqRepo  interfaces.BidRepository
+	BidSvc  *BidService
+	FileSvc *FileService
+	PassSvc *PassService
 }
 
 // NewEventService ...
-func NewEventService(input EventServiceInput) *EventService {
+func NewEventService(di EventServiceDI) *EventService {
 	return &EventService{
-		fileRepo: input.FileRepo,
-		passRepo: input.PassRepo,
-		reqRepo:  input.ReqRepo,
+		bidSvc:  di.BidSvc,
+		fileSvc: di.FileSvc,
+		passSvc: di.PassSvc,
 	}
 }
 
@@ -49,13 +48,10 @@ func (s *EventService) StoreClaim(claim *model.Claim) {
 		Source:         claim.Source,
 	}
 
-	id, err := s.reqRepo.Create(bid)
-	if err != nil {
+	if err := s.bidSvc.Create(bid); err != nil {
 		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create bids record")
 		return
 	}
-
-	bid.ID = int(id)
 
 	for _, car := range claim.Cars {
 		p := &model.Pass{
@@ -85,51 +81,31 @@ func (s *EventService) StoreClaim(claim *model.Claim) {
 			BidID:             bid.ID,
 		}
 
-		id, err := s.passRepo.Create(p)
-		if err != nil {
+		if err := s.passSvc.Create(p); err != nil {
 
 			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create pass")
 
-			s.UpdateState(&model.State{
-				ID:     event.FileID,
-				Status: 3,
-				Error:  err,
-			})
+			s.UpdateFile(event.FileID, 3, err.Error(), claim.Source)
 
 			return
 		}
-		p.ID = int(id)
 	}
 
-	f := &model.File{
-		ID:        event.FileID,
-		Status:    0,
-		Log:       "",
-		CreatedAt: time.Now(),
-		Source:    claim.Source,
-	}
-
-	if err := s.fileRepo.Update(f); err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update state")
-	}
+	s.UpdateFile(event.FileID, 0, "", claim.Source)
 }
 
-// UpdateState ...
-func (s *EventService) UpdateState(e *model.State) {
-
-	var log string
-	if e.Error != nil {
-		log = e.Error.Error()
-	}
+// UpdateFile ...
+func (s *EventService) UpdateFile(id int64, status int, log string, source string) {
 
 	f := &model.File{
-		ID:        e.ID,
-		Status:    e.Status,
+		ID:        id,
+		Status:    status,
 		Log:       log,
 		CreatedAt: time.Now(),
+		Source:    source,
 	}
 
-	if err := s.fileRepo.Update(f); err != nil {
+	if err := s.fileSvc.UpdateState(f); err != nil {
 		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update state")
 	}
 }

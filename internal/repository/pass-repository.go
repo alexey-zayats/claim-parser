@@ -28,9 +28,7 @@ func NewPassRepository(param PassRepositoryInput) interfaces.PassRepository {
 }
 
 // Create ...
-func (r *PassRepository) Create(data *model.Pass) (int64, error) {
-
-	var id int64
+func (r *PassRepository) Create(data *model.Pass) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -72,7 +70,7 @@ func (r *PassRepository) Create(data *model.Pass) (int64, error) {
 			return errors.Wrap(err, "unable update passes")
 		}
 
-		id, err = res.LastInsertId()
+		data.ID, err = res.LastInsertId()
 		if err != nil {
 			return errors.Wrap(err, "unable get passes lasInsertId")
 		}
@@ -81,10 +79,10 @@ func (r *PassRepository) Create(data *model.Pass) (int64, error) {
 	})
 
 	if err != nil {
-		return 0, errors.Wrap(err, "transaction error")
+		return errors.Wrap(err, "transaction error")
 	}
 
-	return id, nil
+	return nil
 }
 
 // Update ...
@@ -144,7 +142,7 @@ func (r *PassRepository) Update(data *model.Pass) error {
 }
 
 // Read ...
-func (r *PassRepository) Read(id int) (*model.Pass, error) {
+func (r *PassRepository) Read(id int64) (*model.Pass, error) {
 	var pass *model.Pass
 
 	err := r.db.Get(pass, "select * from passes where id=?", id)
@@ -156,7 +154,7 @@ func (r *PassRepository) Read(id int) (*model.Pass, error) {
 }
 
 // Delete ...
-func (r *PassRepository) Delete(id int) error {
+func (r *PassRepository) Delete(id int64) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
