@@ -48,10 +48,7 @@ type Pass struct {
 	PassType int `db:"type"`
 	// Номер пропуска
 	PassNumber string `db:"number"`
-	// Должность согласователя
-	AlighnerPost string `db:"alighner_post"`
-	// ФИО согласователя
-	AlighnerName string `db:"alighner_name"`
+
 	// Способ направления
 	SendType string `db:"send_type"`
 	// Статус
@@ -66,4 +63,6 @@ type Pass struct {
 	CreatedBy int64 `db:"created_by"`
 	// ID заявки
 	BidID int64 `db:"bid_id"`
+	// ID пропуска
+	IssuedID int64 `db:"issued_id"`
 }

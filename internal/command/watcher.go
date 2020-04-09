@@ -6,7 +6,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/parser/excel"
 	"github.com/alexey-zayats/claim-parser/internal/parser/formstruct"
 	"github.com/alexey-zayats/claim-parser/internal/parser/godoc"
-	"github.com/alexey-zayats/claim-parser/internal/registry"
+	"github.com/alexey-zayats/claim-parser/internal/parser/issued"
 	"github.com/alexey-zayats/claim-parser/internal/watcher"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -29,7 +29,7 @@ func init() {
 	excel.Register()
 	formstruct.Register()
 	godoc.Register()
-	registry.Register()
+	issued.Register()
 }
 
 // NewWatcher - конструктор команды

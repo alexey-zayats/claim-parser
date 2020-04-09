@@ -55,3 +55,20 @@ type Claim struct {
 	Source      string
 	Event       *Event
 }
+
+// Registry ...
+type Registry struct {
+	CompanyInn     string
+	CompanyOgrn    string
+	CompanyName    string
+	CompanyFio     string
+	CompanyCar     string
+	LegalBasement  string
+	PassNumber     string
+	District       string
+	PassType       int
+	IssuedAt       *time.Time
+	RegistryNumber string
+	Shipping       int
+	Event          *Event
+}

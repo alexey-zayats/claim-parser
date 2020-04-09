@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/alexey-zayats/claim-parser/internal/database"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
@@ -27,6 +28,29 @@ func NewPassRepository(param PassRepositoryInput) interfaces.PassRepository {
 	}
 }
 
+// FindByCar ...
+func (r *PassRepository) FindByCar(car string) (*model.Pass, error) {
+	var record model.Pass
+
+	query :=
+		"SELECT " +
+			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone," +
+			"company_ceo_email, company_lastname, company_firstname, company_patrname, " +
+			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
+			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id " +
+			"FROM passes where employee_car = ?"
+
+	err := r.db.Get(&record, query, car)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "unable get passes record by car %s", car)
+	}
+
+	return &record, nil
+}
+
 // Create ...
 func (r *PassRepository) Create(data *model.Pass) error {
 
@@ -36,8 +60,8 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone," +
 			"company_ceo_email, company_lastname, company_firstname, company_patrname, " +
 			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
-			"source, district, type, number, status, file_id, created_at, created_by, bid_id" +
-			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id" +
+			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 		res, err := t.Exec(query,
 			data.CompanyBranch,
@@ -64,10 +88,11 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			data.FileID,
 			data.CreatedAt,
 			data.CreatedBy,
-			data.BidID)
+			data.BidID,
+			data.IssuedID)
 
 		if err != nil {
-			return errors.Wrap(err, "unable update passes")
+			return err
 		}
 
 		data.ID, err = res.LastInsertId()
@@ -95,7 +120,8 @@ func (r *PassRepository) Update(data *model.Pass) error {
 			"company_ceo_phone = ?, company_ceo_email = ?, company_lastname = ?, company_firstname = ?, " +
 			"company_patrname = ?, employee_lastname = ?, employee_firstname = ?, employee_patrname = ?, " +
 			"employee_car = ?, employee_agree = ?, employee_confirm = ?, source = ?, district = ?, " +
-			"type = ?, number = ?, status = ?, file_id = ?, created_at = ?, created_by = ?, bid_id = ?" +
+			"type = ?, number = ?, status = ?, file_id = ?, created_at = ?, created_by = ?, bid_id = ?, " +
+			"issued_id = ? " +
 			"WHERE id = ?"
 
 		_, err := t.Exec(sql,
@@ -123,11 +149,12 @@ func (r *PassRepository) Update(data *model.Pass) error {
 			data.FileID,
 			data.CreatedAt,
 			data.CreatedBy,
-			data.ID,
-			data.BidID)
+			data.BidID,
+			data.IssuedID,
+			data.ID)
 
 		if err != nil {
-			return errors.Wrap(err, "unable update files")
+			return err
 		}
 
 		return nil
@@ -143,14 +170,14 @@ func (r *PassRepository) Update(data *model.Pass) error {
 
 // Read ...
 func (r *PassRepository) Read(id int64) (*model.Pass, error) {
-	var pass *model.Pass
+	var pass model.Pass
 
-	err := r.db.Get(pass, "select * from passes where id=?", id)
+	err := r.db.Get(&pass, "select * from passes where id=?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get passes record by id %s", id)
 	}
 
-	return pass, nil
+	return &pass, nil
 }
 
 // Delete ...

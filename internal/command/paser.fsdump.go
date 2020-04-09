@@ -14,37 +14,37 @@ import (
 	"sync"
 )
 
-// FSdumpParser структура данных команды
-type FSdumpParser struct {
+// FsdumpParser структура данных команды
+type FsdumpParser struct {
 	config *config.Config
-	svc    *services.FSDumpService
+	svc    *services.ClaimService
 	wg     sync.WaitGroup
 	out    chan interface{}
 }
 
-// FSdumpParserInput - DI параметры команды
-type FSdumpParserInput struct {
+// FsdumpParserDI - DI параметры команды
+type FsdumpParserDI struct {
 	dig.In
 	Config *config.Config
-	Svc    *services.FSDumpService
+	Svc    *services.ClaimService
 }
 
 func init() {
 	fsdump.Register()
 }
 
-// NewFSdumpParser - конструктор команды
-func NewFSdumpParser(params FSdumpParserInput) Command {
-	return &FSdumpParser{
-		config: params.Config,
-		svc:    params.Svc,
+// NewFsdumpParser - конструктор команды
+func NewFsdumpParser(di FsdumpParserDI) Command {
+	return &FsdumpParser{
+		config: di.Config,
+		svc:    di.Svc,
 		wg:     sync.WaitGroup{},
 		out:    make(chan interface{}, 1),
 	}
 }
 
 // Run - имплементация метода Run интерфейса Command
-func (cmd *FSdumpParser) Run(ctx context.Context, args []string) error {
+func (cmd *FsdumpParser) Run(ctx context.Context, args []string) error {
 
 	backend, err := parser.Instance().Backend(fsdump.Name)
 	if err != nil {
@@ -67,7 +67,7 @@ func (cmd *FSdumpParser) Run(ctx context.Context, args []string) error {
 }
 
 // HandleParsed ...
-func (cmd *FSdumpParser) HandleParsed(ctx context.Context) {
+func (cmd *FsdumpParser) HandleParsed(ctx context.Context) {
 	defer cmd.wg.Done()
 
 	for {
@@ -87,7 +87,7 @@ func (cmd *FSdumpParser) HandleParsed(ctx context.Context) {
 
 			logrus.WithFields(logrus.Fields{"(company)": claim.Company.Title}).Debug("claim")
 
-			if err := cmd.svc.SaveClaim(ctx, claim); err != nil {
+			if err := cmd.svc.SaveRecord(ctx, claim); err != nil {
 				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
 			}
 		}

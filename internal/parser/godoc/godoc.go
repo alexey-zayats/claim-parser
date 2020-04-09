@@ -9,9 +9,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"strconv"
 	"strings"
-	"time"
 )
 
 // Parser ...
@@ -31,13 +29,6 @@ func NewParser() (parser.Backend, error) {
 	return &Parser{}, nil
 }
 
-var excelEpoch = time.Date(1899, time.December, 30, 0, 0, 0, 0, time.UTC)
-
-func excelDateToDate(excelDate string) time.Time {
-	var days, _ = strconv.ParseFloat(excelDate, 64)
-	return excelEpoch.Add(time.Second * time.Duration(days*86400))
-}
-
 // Parse ...
 func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
 
@@ -49,7 +40,9 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	var event = &model.Event{}
+	var event = &model.Event{
+		CreatedBy: 1,
+	}
 	if iface, ok := param.Get("event"); ok {
 		event = iface.(*model.Event)
 	}
@@ -100,7 +93,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			claim := &model.Claim{
 				Valid:   true,
 				Event:   event,
-				Created: excelDateToDate(f.GetCellValue(sheetName, fmt.Sprintf("A%d", i))),
+				Created: parser.ExcelDateToDate(f.GetCellValue(sheetName, fmt.Sprintf("A%d", i))),
 			}
 
 			claim.Company.Activity = f.GetCellValue(sheetName, fmt.Sprintf("B%d", i))

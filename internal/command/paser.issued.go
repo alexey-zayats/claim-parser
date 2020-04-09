@@ -6,7 +6,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
-	"github.com/alexey-zayats/claim-parser/internal/parser/godoc"
+	"github.com/alexey-zayats/claim-parser/internal/parser/issued"
 	"github.com/alexey-zayats/claim-parser/internal/services"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,28 +14,28 @@ import (
 	"sync"
 )
 
-// GodocParser структура данных команды
-type GodocParser struct {
+// IssuedParser структура данных команды
+type IssuedParser struct {
 	config *config.Config
-	svc    *services.GodocService
+	svc    *services.IssuedService
 	wg     sync.WaitGroup
 	out    chan interface{}
 }
 
-// GodocParserDI - DI параметры команды
-type GodocParserDI struct {
+// IssuedParserDI - DI параметры команды
+type IssuedParserDI struct {
 	dig.In
 	Config *config.Config
-	Svc    *services.GodocService
+	Svc    *services.IssuedService
 }
 
 func init() {
-	godoc.Register()
+	issued.Register()
 }
 
-// NewGodocParser - конструктор команды
-func NewGodocParser(di GodocParserDI) Command {
-	return &GodocParser{
+// NewIssuedParser - конструктор команды
+func NewIssuedParser(di IssuedParserDI) Command {
+	return &IssuedParser{
 		config: di.Config,
 		svc:    di.Svc,
 		wg:     sync.WaitGroup{},
@@ -44,15 +44,16 @@ func NewGodocParser(di GodocParserDI) Command {
 }
 
 // Run - имплементация метода Run интерфейса Command
-func (cmd *GodocParser) Run(ctx context.Context, args []string) error {
+func (cmd *IssuedParser) Run(ctx context.Context, args []string) error {
 
-	backend, err := parser.Instance().Backend(godoc.Name)
+	backend, err := parser.Instance().Backend(issued.Name)
 	if err != nil {
 		return errors.Wrap(err, "unable find parser for")
 	}
 
 	params := dict.New()
 	params.Set("path", cmd.config.Parser.Path)
+	params.Set("sheet", "Реестр красный")
 
 	cmd.wg.Add(1)
 	go cmd.HandleParsed(ctx)
@@ -65,7 +66,7 @@ func (cmd *GodocParser) Run(ctx context.Context, args []string) error {
 }
 
 // HandleParsed ...
-func (cmd *GodocParser) HandleParsed(ctx context.Context) {
+func (cmd *IssuedParser) HandleParsed(ctx context.Context) {
 	defer cmd.wg.Done()
 
 	for {
@@ -79,12 +80,14 @@ func (cmd *GodocParser) HandleParsed(ctx context.Context) {
 				return
 			}
 
-			claim := iface.(*model.Claim)
+			record := iface.(*model.Registry)
 
-			logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
+			logrus.WithFields(logrus.Fields{
+				"company": record.CompanyName,
+			}).Debug("Registry")
 
-			if err := cmd.svc.SaveClaim(ctx, claim); err != nil {
-				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
+			if err := cmd.svc.SaveRecord(ctx, record); err != nil {
+				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save registry")
 			}
 		}
 	}

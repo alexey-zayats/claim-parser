@@ -43,3 +43,8 @@ func (s *PassService) Delete(id int64) error {
 func (s *PassService) Read(id int64) (*model.Pass, error) {
 	return s.repo.Read(id)
 }
+
+// FindByCar ...
+func (s *PassService) FindByCar(car string) (*model.Pass, error) {
+	return s.repo.FindByCar(car)
+}

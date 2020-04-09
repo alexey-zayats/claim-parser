@@ -8,4 +8,6 @@ type PassRepository interface {
 	Read(id int64) (*model.Pass, error)
 	Update(*model.Pass) error
 	Delete(id int64) error
+
+	FindByCar(car string) (*model.Pass, error)
 }

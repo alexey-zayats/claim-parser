@@ -59,7 +59,16 @@ func (r *FileRepository) UpdateState(data *model.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
-		_, err := t.Exec("UPDATE files SET status = ?, log = ?, source = ? WHERE id = ?", data.Status, data.Log, data.Source, data.ID)
+		query := "UPDATE files SET " +
+			"status = ?, log = ?, source = ? " +
+			"WHERE id = ?"
+
+		_, err := t.Exec(query,
+			data.Status,
+			data.Log,
+			data.Source,
+			data.ID)
+
 		if err != nil {
 			return errors.Wrap(err, "unable update files")
 		}
@@ -76,14 +85,14 @@ func (r *FileRepository) UpdateState(data *model.File) error {
 
 // Read ...
 func (r *FileRepository) Read(id int64) (*model.File, error) {
-	var file *model.File
+	var file model.File
 
-	err := r.db.Get(file, "select * from files where id=?", id)
+	err := r.db.Get(&file, "select * from files where id=?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get file record by id %s", id)
 	}
 
-	return file, nil
+	return &file, nil
 }
 
 // Delete ...

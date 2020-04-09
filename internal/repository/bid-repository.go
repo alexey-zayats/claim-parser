@@ -82,8 +82,8 @@ func (r *BidRepository) Update(data *model.Bid) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.UserID,
-			data.ID,
-			data.Source)
+			data.Source,
+			data.ID)
 
 		if err != nil {
 			return errors.Wrap(err, "unable update bids")
@@ -101,14 +101,14 @@ func (r *BidRepository) Update(data *model.Bid) error {
 
 // Read ...
 func (r *BidRepository) Read(id int64) (*model.Bid, error) {
-	var request *model.Bid
+	var request model.Bid
 
-	err := r.db.Get(request, "select * from bids where id=?", id)
+	err := r.db.Get(&request, "select * from bids where id=?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get bids record by id %s", id)
 	}
 
-	return request, nil
+	return &request, nil
 }
 
 // Delete ...

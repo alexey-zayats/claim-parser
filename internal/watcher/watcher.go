@@ -3,7 +3,6 @@ package watcher
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
@@ -21,11 +20,12 @@ import (
 
 // Watcher структура наблюдателя
 type Watcher struct {
-	config       *config.Config
-	db           *sqlx.DB
-	fs           *fsnotify.Watcher
+	config *config.Config
+	db     *sqlx.DB
+	fs     *fsnotify.Watcher
+	wg     sync.WaitGroup
+
 	eventService *services.EventService
-	wg           sync.WaitGroup
 
 	out chan interface{}
 }
@@ -107,7 +107,7 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 
 	// we only process Create events
 	if e.Op != fsnotify.Create {
-		return fmt.Errorf("p.fsEvent.Op(%v) != fsnotify.Create(%v)", e.Op, fsnotify.Create)
+		return nil
 	}
 
 	// FIXME: притормозим чутка
@@ -171,18 +171,17 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 		case face := <-w.out:
 
 			switch face.(type) {
+			case *model.Claim:
+
+				record := face.(*model.Claim)
+				w.eventService.StoreClaim(record)
+
+			case *model.Registry:
+				record := face.(*model.Registry)
+				w.eventService.StoreRegistry(record)
 			case nil:
 				continue
 			}
-
-			claim := face.(*model.Claim)
-
-			logrus.WithFields(logrus.Fields{
-				"company":  claim.Company.Title,
-				"district": claim.Event.District,
-			}).Debug("claim")
-
-			w.eventService.StoreClaim(claim)
 
 		}
 	}

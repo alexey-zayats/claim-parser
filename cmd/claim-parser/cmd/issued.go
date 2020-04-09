@@ -12,33 +12,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var fsdumpCmd = &cobra.Command{
-	Use:   "fsdump",
-	Short: "fsdump",
-	Long:  "fsdump",
-	Run:   fsdumpMain,
+var issuedCmd = &cobra.Command{
+	Use:   "issued",
+	Short: "issued",
+	Long:  "issued",
+	Run:   issuedMain,
 }
 
 func init() {
-	parserCmd.AddCommand(fsdumpCmd)
+	parserCmd.AddCommand(issuedCmd)
 }
 
-func fsdumpMain(cmd *cobra.Command, args []string) {
+func issuedMain(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                       config.NewConfig,
-			"database.NewConnection":       database.NewConnection,
-			"repository.NewPassRepository": repository.NewPassRepository,
-			"repository.NewBidRepository":  repository.NewBidRepository,
-			"repository.NewIssuedRepository":  repository.NewIssuedRepository,
-			"service.NewPassService":       services.NewPassService,
-			"service.NewBidService":        services.NewBidService,
-			"services.NewClaimService":     services.NewClaimService,
-			"services.NewIssuedService":    services.NewIssuedService,
-			"command.NewParser":            command.NewFsdumpParser,
+			"config":                         config.NewConfig,
+			"database.NewConnection":         database.NewConnection,
+			"repository.NewPassRepository":   repository.NewPassRepository,
+			"repository.NewBidRepository":    repository.NewBidRepository,
+			"repository.NewIssuedRepository": repository.NewIssuedRepository,
+			"service.NewPassService":         services.NewPassService,
+			"service.NewBidService":          services.NewBidService,
+			"services.NewIssuedService":      services.NewIssuedService,
+			"command.NewIssuedParser":        command.NewIssuedParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {

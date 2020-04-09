@@ -33,9 +33,11 @@ func godocMain(cmd *cobra.Command, args []string) {
 			"database.NewConnection":       database.NewConnection,
 			"repository.NewPassRepository": repository.NewPassRepository,
 			"repository.NewBidRepository":  repository.NewBidRepository,
+			"repository.NewIssuedRepository":  repository.NewIssuedRepository,
 			"service.NewPassService":       services.NewPassService,
 			"service.NewBidService":        services.NewBidService,
-			"services.NewGodocService":     services.NewGodocService,
+			"services.NewClaimService":     services.NewClaimService,
+			"services.NewIssuedService":     services.NewIssuedService,
 			"command.NewGodocParser":       command.NewGodocParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {

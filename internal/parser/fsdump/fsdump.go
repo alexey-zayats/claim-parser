@@ -43,7 +43,9 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		return fmt.Errorf("not found 'path' in param dict")
 	}
 
-	var event = &model.Event{}
+	var event = &model.Event{
+		CreatedBy: 1,
+	}
 	if iface, ok := param.Get("event"); ok {
 		event = iface.(*model.Event)
 	}
