@@ -1,0 +1,7 @@
+
+DROP TABLE IF EXISTS `passes`;
+DROP TABLE IF EXISTS `files`;
+DROP TABLE IF EXISTS `bids`;
+DROP TABLE IF EXISTS `users`;
+
+

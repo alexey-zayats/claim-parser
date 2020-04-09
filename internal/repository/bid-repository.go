@@ -9,38 +9,37 @@ import (
 	"go.uber.org/dig"
 )
 
-// RequestRepository ...
-type RequestRepository struct {
+// BidRepository ...
+type BidRepository struct {
 	db *sqlx.DB
 }
 
-// RequestRepositoryInput ...
-type RequestRepositoryInput struct {
+// BidRepositoryInput ...
+type BidRepositoryInput struct {
 	dig.In
 	DB *sqlx.DB
 }
 
-// NewRequestRepository ...
-func NewRequestRepository(param RequestRepositoryInput) interfaces.RequestRepository {
-	return &RequestRepository{
+// NewBidRepository ...
+func NewBidRepository(param BidRepositoryInput) interfaces.BidRepository {
+	return &BidRepository{
 		db: param.DB,
 	}
 }
 
 // Create ...
-func (r *RequestRepository) Create(data *model.Request) (int64, error) {
+func (r *BidRepository) Create(data *model.Bid) (int64, error) {
 
 	var id int64
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
 		query := "INSERT INTO bids (" +
-			"file_id, status, workflow_status, code, district, type, created_at, created_by, user_id, source" +
-			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"file_id, workflow_status, code, district, type, created_at, created_by, user_id, source" +
+			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 		res, err := t.Exec(query,
 			data.FileID,
-			data.Status,
 			data.WorkflowStatus,
 			data.Code,
 			data.District,
@@ -70,16 +69,15 @@ func (r *RequestRepository) Create(data *model.Request) (int64, error) {
 }
 
 // Update ...
-func (r *RequestRepository) Update(data *model.Request) error {
+func (r *BidRepository) Update(data *model.Bid) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
-		sql := "UPDATE bids SET file_id = ?, status = ?, workflow_status = ?, code = ?, " +
+		sql := "UPDATE bids SET file_id = ?, workflow_status = ?, code = ?, " +
 			"district = ?, type = ?, created_at = ?, created_by = ?, user_id = ?, source = ? " +
 			"WHERE id = ?"
-		_, err := t.Exec(sql, data.FileID,
-			data.Status,
-			data.WorkflowStatus,
+		_, err := t.Exec(sql,
+			data.FileID,
 			data.Code,
 			data.District,
 			data.PassType,
@@ -104,8 +102,8 @@ func (r *RequestRepository) Update(data *model.Request) error {
 }
 
 // Read ...
-func (r *RequestRepository) Read(id int) (*model.Request, error) {
-	var request *model.Request
+func (r *BidRepository) Read(id int) (*model.Bid, error) {
+	var request *model.Bid
 
 	err := r.db.Get(request, "select * from bids where id=?", id)
 	if err != nil {
@@ -116,7 +114,7 @@ func (r *RequestRepository) Read(id int) (*model.Request, error) {
 }
 
 // Delete ...
-func (r *RequestRepository) Delete(id int) error {
+func (r *BidRepository) Delete(id int) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 

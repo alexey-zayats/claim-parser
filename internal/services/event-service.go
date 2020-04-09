@@ -12,7 +12,7 @@ import (
 type EventService struct {
 	fileRepo interfaces.FileRepository
 	passRepo interfaces.PassRepository
-	reqRepo  interfaces.RequestRepository
+	reqRepo  interfaces.BidRepository
 }
 
 // EventServiceInput ...
@@ -20,7 +20,7 @@ type EventServiceInput struct {
 	dig.In
 	FileRepo interfaces.FileRepository
 	PassRepo interfaces.PassRepository
-	ReqRepo  interfaces.RequestRepository
+	ReqRepo  interfaces.BidRepository
 }
 
 // NewEventService ...
@@ -37,9 +37,8 @@ func (s *EventService) StoreClaim(claim *model.Claim) {
 
 	event := claim.Event
 
-	r := &model.Request{
+	bid := &model.Bid{
 		FileID:         event.FileID,
-		Status:         0,
 		WorkflowStatus: 1,
 		Code:           claim.Code,
 		District:       event.District,
@@ -50,13 +49,13 @@ func (s *EventService) StoreClaim(claim *model.Claim) {
 		Source:         claim.Source,
 	}
 
-	id, err := s.reqRepo.Create(r)
+	id, err := s.reqRepo.Create(bid)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable create bids record")
 		return
 	}
 
-	r.ID = int(id)
+	bid.ID = int(id)
 
 	for _, car := range claim.Cars {
 		p := &model.Pass{
@@ -79,15 +78,11 @@ func (s *EventService) StoreClaim(claim *model.Claim) {
 			Source:            event.Source,
 			District:          event.District,
 			PassType:          event.PassType,
-			PassNumber:        "",
-			AlighnerPost:      "",
-			AlighnerName:      "",
-			SendType:          "",
 			Status:            0,
 			FileID:            event.FileID,
 			CreatedAt:         claim.Created,
 			CreatedBy:         event.CreatedBy,
-			RequestID:         r.ID,
+			BidID:             bid.ID,
 		}
 
 		id, err := s.passRepo.Create(p)

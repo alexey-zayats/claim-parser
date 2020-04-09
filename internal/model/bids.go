@@ -4,11 +4,10 @@ import (
 	"time"
 )
 
-// Request ...
-type Request struct {
+// Bid ...
+type Bid struct {
 	ID             int       `db:"id"`
 	FileID         int       `db:"file_id"`
-	Status         int       `db:"status"`
 	WorkflowStatus int       `db:"workflow_status"`
 	Code           string    `db:"code"`
 	District       int       `db:"district"`

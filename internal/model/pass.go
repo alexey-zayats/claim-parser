@@ -65,5 +65,5 @@ type Pass struct {
 	// Пользователь
 	CreatedBy int `db:"created_by"`
 	// ID заявки
-	RequestID int `db:"bid_id"`
+	BidID int `db:"bid_id"`
 }

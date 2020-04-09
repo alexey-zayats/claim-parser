@@ -29,12 +29,12 @@ func godocMain(cmd *cobra.Command, args []string) {
 
 	di := &di.Runner{
 		Provide: map[string]interface{}{
-			"config":                          config.NewConfig,
-			"database.NewConnection":          database.NewConnection,
-			"repository.NewPassRepository":    repository.NewPassRepository,
-			"repository.NewRequestRepository": repository.NewRequestRepository,
-			"services.NewGodocService":        services.NewGodocService,
-			"command.NewGodocParser":          command.NewGodocParser,
+			"config":                       config.NewConfig,
+			"database.NewConnection":       database.NewConnection,
+			"repository.NewPassRepository": repository.NewPassRepository,
+			"repository.NewBidRepository":  repository.NewBidRepository,
+			"services.NewGodocService":     services.NewGodocService,
+			"command.NewGodocParser":       command.NewGodocParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {
 			return func(i command.Command) {

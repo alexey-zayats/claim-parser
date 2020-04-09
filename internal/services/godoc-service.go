@@ -12,14 +12,14 @@ import (
 // GodocService ...
 type GodocService struct {
 	passRepo interfaces.PassRepository
-	reqRepo  interfaces.RequestRepository
+	reqRepo  interfaces.BidRepository
 }
 
 // GodocServiceDI ...
 type GodocServiceDI struct {
 	dig.In
 	PassRepo interfaces.PassRepository
-	ReqRepo  interfaces.RequestRepository
+	ReqRepo  interfaces.BidRepository
 }
 
 // NewGodocService ...
@@ -33,8 +33,7 @@ func NewGodocService(input GodocServiceDI) *GodocService {
 // SaveClaim ...
 func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error {
 
-	req := &model.Request{
-		Status:         0,
+	bid := &model.Bid{
 		WorkflowStatus: 1,
 		Code:           claim.Code,
 		CreatedAt:      claim.Created,
@@ -42,11 +41,11 @@ func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error 
 		Source:         claim.Source,
 	}
 
-	id, err := s.reqRepo.Create(req)
+	id, err := s.reqRepo.Create(bid)
 	if err != nil {
 		return errors.Wrap(err, "unable create bid")
 	}
-	req.ID = int(id)
+	bid.ID = int(id)
 
 	for _, car := range claim.Cars {
 
@@ -73,11 +72,10 @@ func (s *GodocService) SaveClaim(ctx context.Context, claim *model.Claim) error 
 				EmployeeConfirm:   1,
 				Source:            3,
 				District:          claim.DistrictID,
-				SendType:          "formstruct-dump",
 				Status:            0,
 				CreatedAt:         claim.Created,
 				CreatedBy:         1,
-				RequestID:         req.ID,
+				BidID:             bid.ID,
 			}
 
 			id, err = s.passRepo.Create(pass)

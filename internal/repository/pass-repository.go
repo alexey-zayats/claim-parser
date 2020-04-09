@@ -66,7 +66,7 @@ func (r *PassRepository) Create(data *model.Pass) (int64, error) {
 			data.FileID,
 			data.CreatedAt,
 			data.CreatedBy,
-			data.RequestID)
+			data.BidID)
 
 		if err != nil {
 			return errors.Wrap(err, "unable update passes")
@@ -126,7 +126,7 @@ func (r *PassRepository) Update(data *model.Pass) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.ID,
-			data.RequestID)
+			data.BidID)
 
 		if err != nil {
 			return errors.Wrap(err, "unable update files")
