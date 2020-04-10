@@ -96,8 +96,6 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 					return errors.Wrap(err, "unable unmarshal json")
 				}
 
-				logrus.WithFields(logrus.Fields{"[company]": claim.Company.Title}).Debug("claim")
-
 				lines = make([]string, 0)
 
 				out <- claim

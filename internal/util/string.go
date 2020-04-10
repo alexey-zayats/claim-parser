@@ -2,6 +2,7 @@ package util
 
 import (
 	"regexp"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -22,6 +23,10 @@ func RunIndex(s string, edge int) int {
 
 // TrimNumber ...
 func TrimNumber(car string) string {
+	re := regexp.MustCompile(`\s+`)
+
+	car = re.ReplaceAllString(car, "")
+	car = strings.ToUpper(car)
 
 	re1 := regexp.MustCompile(`(?i:rus?)$`)
 	re2 := regexp.MustCompile(`(?i:рус?)$`)

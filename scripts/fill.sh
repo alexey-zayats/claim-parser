@@ -20,3 +20,15 @@ DIRPATH=`dirname $REALPATH`
 
 ./scripts/test.sh parse issued --path ../data/issued/1.xlsx
 ./scripts/test.sh parse issued --path ../data/issued/2.xlsx
+
+
+exit
+
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851500497393b7298b4577
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85150d497393b7298b4578
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e8515194973933f2a8b4582
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85151e497393702d8b457b
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851523497393b7298b4579
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e8515294973933f2a8b4583
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851530497393702d8b457c
+docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85a1b8497393702d8b458b

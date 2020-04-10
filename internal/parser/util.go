@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"strconv"
 	"time"
 )
@@ -70,5 +71,5 @@ func NormalizeCarNumber(number string) string {
 		}
 	}
 
-	return string(rnum)
+	return util.TrimNumber(string(rnum))
 }

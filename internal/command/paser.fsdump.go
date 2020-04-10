@@ -85,7 +85,7 @@ func (cmd *FsdumpParser) HandleParsed(ctx context.Context) {
 
 			claim := iface.(*model.Claim)
 
-			logrus.WithFields(logrus.Fields{"(company)": claim.Company.Title}).Debug("claim")
+			logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
 
 			if err := cmd.svc.SaveRecord(ctx, claim); err != nil {
 				logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")

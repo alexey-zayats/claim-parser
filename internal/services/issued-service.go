@@ -84,20 +84,24 @@ func (s *IssuedService) SaveRecord(ctx context.Context, record *model.Registry) 
 		}
 	}
 
-	pass, err := s.passSvc.FindByCar(issued.CompanyCar)
-	if err != nil {
-		return errors.Wrap(err, "unable find pass by issued.car")
-	}
+	if len(issued.CompanyCar) > 0 {
 
-	if pass != nil {
-
-		// FIXME: нужен правильный ID статуса полученного пропуска
-		pass.Status = 100
-		pass.IssuedID = issued.ID
-
-		if err = s.passSvc.Update(pass); err != nil {
-			return errors.Wrap(err, "unable Update pass status")
+		pass, err := s.passSvc.FindByCar(issued.CompanyCar)
+		if err != nil {
+			return errors.Wrap(err, "unable find pass by issued.car")
 		}
+
+		if pass != nil {
+
+			// FIXME: нужен правильный ID статуса полученного пропуска
+			pass.Status = 100
+			pass.IssuedID = issued.ID
+
+			if err = s.passSvc.Update(pass); err != nil {
+				return errors.Wrap(err, "unable Update pass status")
+			}
+		}
+
 	}
 
 	return nil
