@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -102,11 +103,11 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			f.SetCellStyle("Sheet1", axis["issued-at"], axis["issued-at"], dateStyle)
 			f.SetCellStyle("Sheet1", axis["inn"], axis["inn"], numStyle)
 			f.SetCellStyle("Sheet1", axis["ogrn"], axis["ogrn"], numStyle)
+			f.SetCellStyle("Sheet1", axis["ogrn"], axis["ogrn"], numStyle)
 
 			var legalBasement string
 			var passNumber string
 			basementPass := f.GetCellValue(sheetName, axis["basement-pass"])
-
 			if re.MatchString(basementPass) {
 				matches := re.FindAllStringSubmatch(basementPass, -1)
 				if len(matches) > 0 {
@@ -114,8 +115,16 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 					passNumber = matches[0][2]
 				}
 			}
+
 			if len(passNumber) == 0 {
-				passNumber = basementPass
+				if strings.Contains(basementPass, ".") || strings.Contains(basementPass, ",") {
+					f, err := strconv.ParseFloat(basementPass, 64)
+					if err == nil {
+						passNumber = fmt.Sprintf("%d", int64(f))
+					}
+				} else {
+					passNumber = basementPass
+				}
 			}
 
 			passType := 0
@@ -156,7 +165,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				CompanyOgrn:    f.GetCellValue(sheetName, axis["ogrn"]),
 				CompanyName:    f.GetCellValue(sheetName, axis["name"]),
 				CompanyFio:     f.GetCellValue(sheetName, axis["fio"]),
-				CompanyCar:     car,
+				CompanyCar:     parser.NormalizeCarNumber(car),
 				LegalBasement:  legalBasement,
 				PassNumber:     passNumber,
 				District:       f.GetCellValue(sheetName, axis["district"]),

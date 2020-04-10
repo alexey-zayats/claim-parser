@@ -87,24 +87,37 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			return fmt.Errorf("canceled")
 		default:
 
-			dateAxis := fmt.Sprintf("A%d", i)
-			f.SetCellStyle("Sheet1", dateAxis, dateAxis, dateStyle)
+			axis := map[string]string{
+				"created":         fmt.Sprintf("A%d", i),
+				"activity":        fmt.Sprintf("B%d", i),
+				"compaty-title":   fmt.Sprintf("C%d", i),
+				"compaty-address": fmt.Sprintf("D%d", i),
+				"compaty-inn":     fmt.Sprintf("E%d", i),
+				"compaty-fio":     fmt.Sprintf("F%d", i),
+				"compaty-phone":   fmt.Sprintf("G%d", i),
+				"compaty-email":   fmt.Sprintf("H%d", i),
+				"compaty-cars":    fmt.Sprintf("I%d", i),
+				"agreement":       fmt.Sprintf("J%d", i),
+				"reliability":     fmt.Sprintf("K%d", i),
+				"ogrn":            fmt.Sprintf("L%d", i),
+			}
+
+			f.SetCellStyle("Sheet1", axis["created"], axis["created"], dateStyle)
 
 			claim := &model.Claim{
 				Valid:   true,
 				Event:   event,
-				Created: parser.ExcelDateToDate(f.GetCellValue(sheetName, fmt.Sprintf("A%d", i))),
+				Created: parser.ExcelDateToDate(f.GetCellValue(sheetName, axis["created"])),
 			}
 
-			claim.Company.Activity = f.GetCellValue(sheetName, fmt.Sprintf("B%d", i))
-			claim.Company.Title = f.GetCellValue(sheetName, fmt.Sprintf("C%d", i))
-			claim.Company.Address = f.GetCellValue(sheetName, fmt.Sprintf("D%d", i))
+			claim.Company.Activity = f.GetCellValue(sheetName, axis["activity"])
+			claim.Company.Title = f.GetCellValue(sheetName, axis["compaty-title"])
+			claim.Company.Address = f.GetCellValue(sheetName, axis["compaty-address"])
 
-			innAxis := fmt.Sprintf("E%d", i)
-			f.SetCellStyle("Sheet1", innAxis, innAxis, numStyle)
-			claim.Company.INN = f.GetCellValue(sheetName, innAxis)
+			f.SetCellStyle("Sheet1", axis["compaty-inn"], axis["compaty-inn"], numStyle)
+			claim.Company.INN = f.GetCellValue(sheetName, axis["compaty-inn"])
 
-			fio := strings.Split(f.GetCellValue(sheetName, fmt.Sprintf("F%d", i)), " ")
+			fio := strings.Split(f.GetCellValue(sheetName, axis["compaty-fio"]), " ")
 			if len(fio) == 3 {
 				claim.Company.Head.FIO.Surname = fio[0]
 				claim.Company.Head.FIO.Name = fio[1]
@@ -118,14 +131,15 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				claim.Valid = false
 			}
 
-			claim.Company.Head.Contact.Phone = f.GetCellValue(sheetName, fmt.Sprintf("G%d", i))
-			claim.Company.Head.Contact.EMail = f.GetCellValue(sheetName, fmt.Sprintf("H%d", i))
+			claim.Company.Head.Contact.Phone = f.GetCellValue(sheetName, axis["compaty-phone"])
+			claim.Company.Head.Contact.EMail = f.GetCellValue(sheetName, axis["compaty-email"])
 
-			claim.Source = f.GetCellValue(sheetName, fmt.Sprintf("I%d", i))
+			claim.Source = f.GetCellValue(sheetName, axis["compaty-cars"])
 			claim.Cars = parser.ParseCars(claim.Source)
 
-			claim.Agreement = f.GetCellValue(sheetName, fmt.Sprintf("J%d", i))
-			claim.Reliability = f.GetCellValue(sheetName, fmt.Sprintf("K%d", i))
+			claim.Agreement = f.GetCellValue(sheetName, axis["agreement"])
+			claim.Reliability = f.GetCellValue(sheetName, axis["reliability"])
+			claim.Ogrn = f.GetCellValue(sheetName, axis["ogrn"])
 
 			out <- claim
 		}

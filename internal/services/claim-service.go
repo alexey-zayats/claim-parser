@@ -79,6 +79,7 @@ func (s *ClaimService) SaveRecord(ctx context.Context, claim *model.Claim) error
 			CreatedAt:         claim.Created,
 			CreatedBy:         event.CreatedBy,
 			BidID:             bid.ID,
+			Ogrn:              claim.Ogrn,
 		}
 
 		if event.Check == 1 {
@@ -89,6 +90,7 @@ func (s *ClaimService) SaveRecord(ctx context.Context, claim *model.Claim) error
 			if issued != nil {
 				// FIXME: нужен правильный ID статуса полученного пропуска
 				p.Status = 100
+				p.IssuedID = issued.ID
 			}
 		}
 

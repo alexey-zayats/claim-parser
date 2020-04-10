@@ -2,9 +2,11 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/database"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -32,15 +34,23 @@ func NewPassRepository(param PassRepositoryInput) interfaces.PassRepository {
 func (r *PassRepository) FindByCar(car string) (*model.Pass, error) {
 	var record model.Pass
 
-	query :=
-		"SELECT " +
-			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone," +
-			"company_ceo_email, company_lastname, company_firstname, company_patrname, " +
-			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
-			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id " +
-			"FROM passes where employee_car = ?"
+	//idx := util.RunIndex(car, 6)
+	//num := car[0:idx]
 
-	err := r.db.Get(&record, query, car)
+	num := util.TrimNumber(car)
+
+	query := fmt.Sprintf(
+		"SELECT "+
+			"id, "+
+			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone,"+
+			"company_ceo_email, company_lastname, company_firstname, company_patrname, "+
+			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, "+
+			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id, company_ogrn "+
+			"FROM passes where employee_car like '%s%%'", num)
+
+	//fmt.Println(query)
+
+	err := r.db.Get(&record, query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -60,8 +70,8 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone," +
 			"company_ceo_email, company_lastname, company_firstname, company_patrname, " +
 			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
-			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id" +
-			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id, company_ogrn" +
+			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 		res, err := t.Exec(query,
 			data.CompanyBranch,
@@ -89,7 +99,8 @@ func (r *PassRepository) Create(data *model.Pass) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.BidID,
-			data.IssuedID)
+			data.IssuedID,
+			data.Ogrn)
 
 		if err != nil {
 			return err
@@ -121,7 +132,7 @@ func (r *PassRepository) Update(data *model.Pass) error {
 			"company_patrname = ?, employee_lastname = ?, employee_firstname = ?, employee_patrname = ?, " +
 			"employee_car = ?, employee_agree = ?, employee_confirm = ?, source = ?, district = ?, " +
 			"type = ?, number = ?, status = ?, file_id = ?, created_at = ?, created_by = ?, bid_id = ?, " +
-			"issued_id = ? " +
+			"issued_id = ?, company_ogrn = ? " +
 			"WHERE id = ?"
 
 		_, err := t.Exec(sql,
@@ -151,6 +162,7 @@ func (r *PassRepository) Update(data *model.Pass) error {
 			data.CreatedBy,
 			data.BidID,
 			data.IssuedID,
+			data.Ogrn,
 			data.ID)
 
 		if err != nil {

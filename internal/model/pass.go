@@ -42,27 +42,40 @@ type Pass struct {
 
 	// excel || fromstruct
 	Source int `db:"source"`
+
 	// Муниципальный округ
 	District int64 `db:"district"`
+
 	// Тип пропуска
 	PassType int `db:"type"`
+
 	// Номер пропуска
 	PassNumber string `db:"number"`
 
 	// Способ направления
 	SendType string `db:"send_type"`
+
 	// Статус
 	Status int `db:"status"`
+
 	// ID из таблицы files файла заявки
 	FileID int64 `db:"file_id"`
+
 	// Log
 	Log string `db:"log"`
+
 	// Дата создания
 	CreatedAt time.Time `db:"created_at"`
+
 	// Пользователь
 	CreatedBy int64 `db:"created_by"`
+
 	// ID заявки
 	BidID int64 `db:"bid_id"`
+
 	// ID пропуска
 	IssuedID int64 `db:"issued_id"`
+
+	// ОГРН компании
+	Ogrn string `db:"company_ogrn"`
 }

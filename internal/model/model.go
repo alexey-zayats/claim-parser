@@ -53,6 +53,7 @@ type Claim struct {
 	Reason      *string
 	Valid       bool
 	Source      string
+	Ogrn        string
 	Event       *Event
 }
 

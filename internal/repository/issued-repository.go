@@ -2,9 +2,11 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/database"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
 	"github.com/alexey-zayats/claim-parser/internal/model"
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -47,7 +49,14 @@ func (r *IssuedRepository) FindByPass(pass string) (*model.Issued, error) {
 func (r *IssuedRepository) FindByCar(car string) (*model.Issued, error) {
 	var record model.Issued
 
-	err := r.db.Get(&record, "SELECT * FROM issued where company_car = ?", car)
+	//idx := util.RunIndex(car, 6)
+	//num := car[0:idx]
+
+	num := util.TrimNumber(car)
+
+	query := fmt.Sprintf("SELECT * FROM issued where company_car like '%s%%'", num)
+
+	err := r.db.Get(&record, query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

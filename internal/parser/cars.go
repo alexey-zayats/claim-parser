@@ -168,7 +168,7 @@ func parseCar(item string) []model.Car {
 		//fmt.Printf("<Number>: %s; <FIO>: [%#v]\n", number, strings.Join(fio, ", ") )
 
 		car := model.Car{
-			Number: number,
+			Number: NormalizeCarNumber(number),
 		}
 
 		if len(fio) >= 3 {

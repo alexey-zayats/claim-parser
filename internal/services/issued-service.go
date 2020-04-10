@@ -90,7 +90,11 @@ func (s *IssuedService) SaveRecord(ctx context.Context, record *model.Registry) 
 	}
 
 	if pass != nil {
+
+		// FIXME: нужен правильный ID статуса полученного пропуска
+		pass.Status = 100
 		pass.IssuedID = issued.ID
+
 		if err = s.passSvc.Update(pass); err != nil {
 			return errors.Wrap(err, "unable Update pass status")
 		}

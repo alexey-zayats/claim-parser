@@ -31,6 +31,7 @@ CREATE TABLE `passes` (
     `created_by` int NOT NULL COMMENT 'Пользователь создания',
     `bid_id` int DEFAULT NULL,
     `issued_id` int DEFAULT NULL,
+    `company_ogrn` varchar(100) NOT NULL COMMENT 'ОГРН',
     PRIMARY KEY (`id`),
     KEY `idx_company_inn` (`company_inn`),
     KEY `idx_district` (`district`),
