@@ -115,11 +115,14 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		}
 	}
 
+	//if len(lines) > 0 {
+	fmt.Println(lines)
 	claim, err := p.makeClaim(event, created, lines)
 	if err != nil {
 		return errors.Wrap(err, "unable unmarshal json")
 	}
 	out <- claim
+	//}
 
 	out <- nil
 
