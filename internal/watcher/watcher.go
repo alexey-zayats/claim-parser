@@ -120,8 +120,8 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 
 	logrus.WithFields(logrus.Fields{"data": string(data)}).Debug("event data")
 
-	var event model.Event
-	if err := json.Unmarshal(data, &event); err != nil {
+	event := &model.Event{}
+	if err := json.Unmarshal(data, event); err != nil {
 		return errors.Wrap(err, "unable parse json")
 	}
 
@@ -149,7 +149,7 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 
 	params := dict.New()
 	params.Set("path", event.Filepath)
-	params.Set("event", &event)
+	params.Set("event", event)
 
 	if err := b.Parse(ctx, params, w.out); err != nil {
 		w.eventService.UpdateFile(event.FileID, 2, err.Error(), sourceType)

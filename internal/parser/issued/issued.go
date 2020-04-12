@@ -7,9 +7,9 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -45,6 +45,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	var event = &model.Event{
 		CreatedBy: 1,
 	}
+
 	if iface, ok := param.Get("event"); ok {
 		event = iface.(*model.Event)
 	}
@@ -110,15 +111,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			semicolon := strings.LastIndex(basementPass, ";")
 			colonIndex := strings.LastIndex(basementPass, ",")
 
-			if semicolon == - 1 && colonIndex == -1 {
-				if strings.Contains(basementPass, ".") || strings.Contains(basementPass, ",") {
-					f, err := strconv.ParseFloat(basementPass, 64)
-					if err == nil {
-						passNumber = fmt.Sprintf("%d", int64(f))
-					}
-				} else {
-					passNumber = basementPass
-				}
+			if semicolon == -1 && colonIndex == -1 {
+				passNumber = basementPass
 			} else {
 				splitIndex := -1
 				if semicolon > colonIndex {
@@ -132,9 +126,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 			passNumber = strings.ReplaceAll(passNumber, "№", "")
 
-			legalBasement = strings.TrimSpace(passNumber)
-			passNumber = strings.TrimSpace(passNumber)
-
+			legalBasement = util.TrimSpaces(passNumber)
+			passNumber = util.TrimSpaces(passNumber)
 
 			passType := 0
 			passTypeStr := f.GetCellValue(sheetName, axis["pass-type"])

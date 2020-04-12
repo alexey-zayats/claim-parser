@@ -3,6 +3,7 @@ package util
 import (
 	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -35,4 +36,14 @@ func TrimNumber(car string) string {
 	car = re2.ReplaceAllString(car, "")
 
 	return car
+}
+
+// TrimSpaces ...
+func TrimSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, str)
 }
