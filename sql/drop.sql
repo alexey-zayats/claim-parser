@@ -7,3 +7,8 @@ DROP TABLE IF EXISTS districts;
 DROP TABLE IF EXISTS users;
 
 
+/*
+TRUNCATE TABLE issued;
+TRUNCATE TABLE passes;
+TRUNCATE TABLE bids;
+ */

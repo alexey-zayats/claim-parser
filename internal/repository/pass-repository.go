@@ -40,7 +40,6 @@ func (r *PassRepository) FindByCar(car string) (*model.Pass, error) {
 			"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, " +
 			"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id, company_ogrn " +
 			"FROM passes where employee_car = ?"
-	//fmt.Println(query)
 
 	err := r.db.Get(&record, query, car)
 	if err != nil {
@@ -176,7 +175,13 @@ func (r *PassRepository) Update(data *model.Pass) error {
 func (r *PassRepository) Read(id int64) (*model.Pass, error) {
 	var pass model.Pass
 
-	err := r.db.Get(&pass, "select * from passes where id=?", id)
+	err := r.db.Get(&pass, "SELECT "+
+		"id, "+
+		"company_branch, company_okved, company_inn, company_name, company_address, company_ceo_phone,"+
+		"company_ceo_email, company_lastname, company_firstname, company_patrname, "+
+		"employee_lastname, employee_firstname, employee_patrname, employee_car, employee_agree, employee_confirm, "+
+		"source, district, type, number, status, file_id, created_at, created_by, bid_id, issued_id, company_ogrn "+
+		"FROM passes WHERE id = ?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get passes record by id %s", id)
 	}

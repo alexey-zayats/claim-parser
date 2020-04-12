@@ -103,7 +103,10 @@ func (r *BidRepository) Update(data *model.Bid) error {
 func (r *BidRepository) Read(id int64) (*model.Bid, error) {
 	var request model.Bid
 
-	err := r.db.Get(&request, "select * from bids where id=?", id)
+	err := r.db.Get(&request, "SELECT "+
+		"id, file_id, workflow_status, code, district, type, "+
+		"created_at, created_by, user_id, source "+
+		"FROM bids WHERE id = ?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get bids record by id %s", id)
 	}

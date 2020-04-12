@@ -59,7 +59,8 @@ func (r *FileRepository) UpdateState(data *model.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
-		query := "UPDATE files SET " +
+		query := "UPDATE files " +
+			"SET " +
 			"status = ?, log = ?, source = ? " +
 			"WHERE id = ?"
 
@@ -87,7 +88,9 @@ func (r *FileRepository) UpdateState(data *model.File) error {
 func (r *FileRepository) Read(id int64) (*model.File, error) {
 	var file model.File
 
-	err := r.db.Get(&file, "select * from files where id=?", id)
+	err := r.db.Get(&file, "SELECT "+
+		"id, filepath, status, log, created_at, source "+
+		"FROM files WHERE id = ?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get file record by id %s", id)
 	}

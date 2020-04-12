@@ -32,7 +32,11 @@ func NewIssuedRepository(param IssuedRepositoryDI) interfaces.IssuedRepository {
 func (r *IssuedRepository) FindByPass(pass string) (*model.Issued, error) {
 	var record model.Issued
 
-	err := r.db.Get(&record, "SELECT * FROM issued where pass_number = ?", pass)
+	err := r.db.Get(&record, "SELECT "+
+		"id, created_at, created_by, company_inn, company_ogrn, company_name, "+
+		"company_fio, company_car, legal_basement, pass_number, district, pass_type, issued_at, "+
+		"registry_number, file_id, shipping "+
+		"FROM issued where pass_number = ?", pass)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -47,7 +51,11 @@ func (r *IssuedRepository) FindByPass(pass string) (*model.Issued, error) {
 func (r *IssuedRepository) FindByCar(car string) (*model.Issued, error) {
 	var record model.Issued
 
-	query := "SELECT * FROM issued where company_car = ?"
+	query := "SELECT " +
+		"id, created_at, created_by, company_inn, company_ogrn, company_name, " +
+		"company_fio, company_car, legal_basement, pass_number, district, pass_type, issued_at, " +
+		"registry_number, file_id, shipping " +
+		" FROM issued where company_car = ?"
 
 	err := r.db.Get(&record, query, car)
 	if err != nil {
@@ -155,7 +163,11 @@ func (r *IssuedRepository) Update(data *model.Issued) error {
 func (r *IssuedRepository) Read(id int64) (*model.Issued, error) {
 	var data model.Issued
 
-	err := r.db.Get(&data, "select * from issued where id=?", id)
+	err := r.db.Get(&data, "SELECT "+
+		"created_at, created_by, company_inn, company_ogrn, company_name, "+
+		"company_fio, company_car, legal_basement, pass_number, district, pass_type, issued_at, "+
+		"registry_number, file_id, shipping "+
+		"FROM issued WHERE id = ?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get issued record by id %s", id)
 	}
