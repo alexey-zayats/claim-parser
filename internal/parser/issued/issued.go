@@ -9,7 +9,6 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -75,8 +74,6 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	numStyle, _ := f.NewStyle(`{"number_format":1}`)
 	dateStyle, _ := f.NewStyle(`{"custom_number_format": "m.d.yyyy h:mm:ss"}`)
 
-	re := regexp.MustCompile(`^(.+)(?:,|;)\s?(\p{L}?\s?\d+)$`)
-
 	for rows.Next() {
 
 		i++
@@ -107,16 +104,13 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 			var legalBasement string
 			var passNumber string
-			basementPass := f.GetCellValue(sheetName, axis["basement-pass"])
-			if re.MatchString(basementPass) {
-				matches := re.FindAllStringSubmatch(basementPass, -1)
-				if len(matches) > 0 {
-					legalBasement = matches[0][1]
-					passNumber = matches[0][2]
-				}
-			}
 
-			if len(passNumber) == 0 {
+			basementPass := f.GetCellValue(sheetName, axis["basement-pass"])
+
+			semicolon := strings.LastIndex(basementPass, ";")
+			colonIndex := strings.LastIndex(basementPass, ",")
+
+			if semicolon == - 1 && colonIndex == -1 {
 				if strings.Contains(basementPass, ".") || strings.Contains(basementPass, ",") {
 					f, err := strconv.ParseFloat(basementPass, 64)
 					if err == nil {
@@ -125,7 +119,19 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				} else {
 					passNumber = basementPass
 				}
+			} else {
+				splitIndex := -1
+				if semicolon > colonIndex {
+					splitIndex = semicolon
+				} else {
+					splitIndex = colonIndex
+				}
+				legalBasement = basementPass[0:splitIndex]
+				passNumber = basementPass[splitIndex+1:]
 			}
+
+			legalBasement = strings.TrimSpace(passNumber)
+			passNumber = strings.TrimSpace(passNumber)
 
 			passType := 0
 			passTypeStr := f.GetCellValue(sheetName, axis["pass-type"])
