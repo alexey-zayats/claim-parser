@@ -130,8 +130,11 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				passNumber = basementPass[splitIndex+1:]
 			}
 
+			passNumber = strings.ReplaceAll(passNumber, "№", "")
+
 			legalBasement = strings.TrimSpace(passNumber)
 			passNumber = strings.TrimSpace(passNumber)
+
 
 			passType := 0
 			passTypeStr := f.GetCellValue(sheetName, axis["pass-type"])
