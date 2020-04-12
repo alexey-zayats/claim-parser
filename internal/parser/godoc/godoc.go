@@ -102,7 +102,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				"ogrn":            fmt.Sprintf("L%d", i),
 			}
 
-			f.SetCellStyle("Sheet1", axis["created"], axis["created"], dateStyle)
+			f.SetCellStyle(sheetName, axis["created"], axis["created"], dateStyle)
 
 			claim := &model.Claim{
 				Valid:   true,
@@ -114,7 +114,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 			claim.Company.Title = f.GetCellValue(sheetName, axis["compaty-title"])
 			claim.Company.Address = f.GetCellValue(sheetName, axis["compaty-address"])
 
-			f.SetCellStyle("Sheet1", axis["compaty-inn"], axis["compaty-inn"], numStyle)
+			f.SetCellStyle(sheetName, axis["compaty-inn"], axis["compaty-inn"], numStyle)
 			claim.Company.INN = f.GetCellValue(sheetName, axis["compaty-inn"])
 
 			fio := strings.Split(f.GetCellValue(sheetName, axis["compaty-fio"]), " ")
@@ -139,6 +139,8 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 			claim.Agreement = f.GetCellValue(sheetName, axis["agreement"])
 			claim.Reliability = f.GetCellValue(sheetName, axis["reliability"])
+
+			f.SetCellStyle(sheetName, axis["ogrn"], axis["ogrn"], numStyle)
 			claim.Ogrn = f.GetCellValue(sheetName, axis["ogrn"])
 
 			out <- claim

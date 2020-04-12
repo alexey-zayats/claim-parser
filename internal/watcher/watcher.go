@@ -177,8 +177,10 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 				w.eventService.StoreClaim(record)
 
 			case *model.Registry:
+
 				record := face.(*model.Registry)
 				w.eventService.StoreRegistry(record)
+
 			case nil:
 				continue
 			}
