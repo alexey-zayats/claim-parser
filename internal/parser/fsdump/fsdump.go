@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
-	"github.com/alexey-zayats/claim-parser/internal/parser/formstruct"
+	"github.com/alexey-zayats/claim-parser/internal/parser/fs"
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -17,44 +17,37 @@ import (
 
 // Parser ...
 type Parser struct {
+	event *model.Event
+	path  string
+	name  string
 }
-
-// Name ...
-const Name = "fsdump"
 
 // Register ...
 func Register() {
-	parser.Instance().Add(Name, NewParser)
+	parser.Instance().Add("form.struct.dump", NewParser)
 }
 
 // NewParser ...
-func NewParser() (parser.Backend, error) {
-	return &Parser{}, nil
+func NewParser(name string) (parser.Backend, error) {
+	return &Parser{
+		name: name,
+	}, nil
+}
+
+// WithEvent ..
+func (p *Parser) WithEvent(event *model.Event) {
+	p.event = event
+	p.path = event.Filepath
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
+func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 
-	var path string
+	logrus.WithFields(logrus.Fields{"name": p.name, "path": p.path, "event": p.event}).Debug("fsdump.Parse")
 
-	if iface, ok := param.Get("path"); ok {
-		path = iface.(string)
-	} else {
-		return fmt.Errorf("not found 'path' in param dict")
-	}
-
-	var event = &model.Event{
-		CreatedBy: 1,
-	}
-	if iface, ok := param.Get("event"); ok {
-		event = iface.(*model.Event)
-	}
-
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("fsdump.Parse")
-
-	data, err := ioutil.ReadFile(path)
+	data, err := ioutil.ReadFile(p.path)
 	if err != nil {
-		return errors.Wrapf(err, "unable read file %s", path)
+		return errors.Wrapf(err, "unable read file %s", p.path)
 	}
 
 	head := regexp.MustCompile(`/\* \d+ createdAt:(.[^\*]+)\*/`)
@@ -91,14 +84,18 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 
 				inClaim = false
 
-				claim, err := p.makeClaim(event, created, lines)
+				claim, err := p.makeClaim(created, lines)
 				if err != nil {
-					return errors.Wrap(err, "unable unmarshal json")
+					return errors.Wrap(err, "unable make claim")
 				}
 
 				lines = make([]string, 0)
 
-				out <- claim
+				out <- &model.Out{
+					Kind:  model.OutVehicleClaim,
+					Value: claim,
+					Event: p.event,
+				}
 				continue
 			}
 
@@ -116,19 +113,25 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 	}
 
 	if len(lines) > 0 {
-		claim, err := p.makeClaim(event, created, lines)
+		claim, err := p.makeClaim(created, lines)
 		if err != nil {
-			return errors.Wrap(err, "unable unmarshal json")
+			return errors.Wrap(err, "unable make claim")
 		}
-		out <- claim
+		out <- &model.Out{
+			Kind:  model.OutVehicleClaim,
+			Event: p.event,
+			Value: claim,
+		}
 	}
 
-	out <- nil
+	out <- &model.Out{
+		Kind: model.OutUnknown,
+	}
 
 	return nil
 }
 
-func (p *Parser) makeClaim(event *model.Event, created string, lines []string) (*model.Claim, error) {
+func (p *Parser) makeClaim(created string, lines []string) (*model.VehicleClaim, error) {
 
 	last := len(lines) - 1
 	lines = append(lines, lines[last])
@@ -144,54 +147,55 @@ func (p *Parser) makeClaim(event *model.Event, created string, lines []string) (
 		return nil, errors.Wrap(err, "unable unmarshal json")
 	}
 
-	claim := &model.Claim{
+	claim := &model.VehicleClaim{
 		Code:       form.ID,
 		Created:    form.Created.Time,
 		DistrictID: Districts[form.FormID].ID,
 		District:   Districts[form.FormID].Title,
-		Event:      event,
+		Success:    true,
 	}
 
 	for _, f := range form.Data {
 
+		ok := false
+
 		value := f.Value[0]
 
 		switch Forms[form.FormID][f.FID] {
-		case formstruct.StateKind:
+		case fs.StateKind:
 			claim.Company.Activity = value
-		case formstruct.StateName:
+		case fs.StateName:
 			claim.Company.Title = value
-		case formstruct.StateAddress:
+		case fs.StateAddress:
 			claim.Company.Address = value
-		case formstruct.StateINN:
-			re := regexp.MustCompile(`\D`)
-			claim.Company.INN = re.ReplaceAllString(value, "")
-		case formstruct.StateFIO:
-			fio := strings.Split(value, " ")
+		case fs.StateINN:
 
-			if len(fio) < 3 {
-				claim.Valid = false
-				reason := "Нет данных по ФИО руководителя"
-				claim.Reason = &reason
-			} else {
-				claim.Company.Head = model.Person{
-					FIO: model.FIO{
-						Surname:    fio[0],
-						Name:       fio[1],
-						Patronymic: fio[2],
-					},
-				}
+			if claim.Company.TIN, ok = parser.ParseInt64(value); ok == false {
+				claim.Reason = append(claim.Reason, "ИНН не является числом")
+				claim.Success = false
 			}
-		case formstruct.StatePhone:
-			claim.Company.Head.Contact.Phone = value
-		case formstruct.StateEMail:
-			claim.Company.Head.Contact.EMail = value
-		case formstruct.StateCars:
+
+			d := util.DigitsCount(claim.Company.TIN)
+			if d < 10 || d > 12 {
+				claim.Reason = append(claim.Reason, fmt.Sprintf("ИНН содержит %d цифр", d))
+				claim.Success = false
+			}
+
+		case fs.StateFIO:
+			claim.Company.HeadName = strings.TrimSpace(value)
+		case fs.StatePhone:
+			claim.Company.HeadPhone = util.TrimSpaces(value)
+		case fs.StateEMail:
+			claim.Company.HeadEmail = util.TrimSpaces(value)
+		case fs.StateCars:
 			claim.Source = value
-			claim.Cars = parser.ParseCars(value)
-		case formstruct.StateAgreement:
+			if claim.Passes, ok = parser.ParseVehicles(claim.Source); ok == false {
+				claim.Reason = append(claim.Reason, "не удалось разобрать список номер/фио")
+				claim.Success = false
+			}
+		case fs.StateAgreement:
 			claim.Agreement = value
-		case formstruct.StateReliability:
+		case fs.StateReliability:
 			claim.Reliability = value
 		}
 	}

@@ -1,8 +1,11 @@
 package parser
 
 import (
+	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/util"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -72,4 +75,42 @@ func NormalizeCarNumber(number string) string {
 	}
 
 	return util.TrimNumber(string(rnum))
+}
+
+var (
+	spaceRe = regexp.MustCompile(`\s+`)
+	nanRe   = regexp.MustCompile(`\D`)
+)
+
+// ParseFIO ...s
+func ParseFIO(s string) (model.FIO, bool) {
+
+	data := spaceRe.Split(strings.TrimSpace(s), -1)
+
+	success := false
+	fio := model.FIO{}
+
+	if len(data) >= 3 {
+		success = true
+		fio.Lastname = data[0]
+		fio.Firstname = data[1]
+		fio.Patronymic = data[2]
+	} else if len(data) == 2 {
+		fio.Lastname = data[0]
+		fio.Firstname = data[1]
+	} else if len(data) == 1 {
+		fio.Lastname = data[0]
+	}
+
+	return fio, success
+}
+
+// ParseInt64 ...
+func ParseInt64(s string) (int64, bool) {
+	s = nanRe.ReplaceAllString(s, "")
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
 }

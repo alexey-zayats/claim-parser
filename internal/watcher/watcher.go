@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alexey-zayats/claim-parser/internal/config"
-	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/alexey-zayats/claim-parser/internal/services"
@@ -27,7 +26,7 @@ type Watcher struct {
 
 	eventService *services.EventService
 
-	out chan interface{}
+	out chan *model.Out
 }
 
 // InputParams DI наблюдателя
@@ -52,7 +51,7 @@ func New(params InputParams) (*Watcher, error) {
 		fs:           fs,
 		eventService: params.ES,
 		wg:           sync.WaitGroup{},
-		out:          make(chan interface{}, 1),
+		out:          make(chan *model.Out, 1),
 	}, nil
 }
 
@@ -130,13 +129,15 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 	case 1:
 		sourceType = "excel"
 	case 2:
-		sourceType = "formstruct"
+		sourceType = "form.struct"
 	case 3:
-		sourceType = "fsdump"
+		sourceType = "form.struct.dump"
 	case 4:
-		sourceType = "godoc"
+		sourceType = "gsheet.vehicle"
 	case 5:
 		sourceType = "issued"
+	case 6:
+		sourceType = "gsheet.people"
 	default:
 		sourceType = "unknown"
 	}
@@ -147,11 +148,9 @@ func (w *Watcher) processEvent(ctx context.Context, e fsnotify.Event) error {
 		return errors.Wrap(err, "unable get parser")
 	}
 
-	params := dict.New()
-	params.Set("path", event.Filepath)
-	params.Set("event", event)
+	b.WithEvent(event)
 
-	if err := b.Parse(ctx, params, w.out); err != nil {
+	if err := b.Parse(ctx, w.out); err != nil {
 		w.eventService.UpdateFile(event.FileID, 2, err.Error(), sourceType)
 		logrus.WithFields(logrus.Fields{"reason": err, "path": e.Name}).Error("unable parse")
 	}
@@ -168,23 +167,8 @@ func (w *Watcher) HandleParsed(ctx context.Context, worker int) {
 		select {
 		case <-ctx.Done():
 			return
-		case face := <-w.out:
-
-			switch face.(type) {
-			case *model.Claim:
-
-				record := face.(*model.Claim)
-				w.eventService.StoreClaim(record)
-
-			case *model.Registry:
-
-				record := face.(*model.Registry)
-				w.eventService.StoreRegistry(record)
-
-			case nil:
-				continue
-			}
-
+		case out := <-w.out:
+			w.eventService.Store(out)
 		}
 	}
 }

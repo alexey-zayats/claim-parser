@@ -1,8 +1,8 @@
 package services
 
 import (
+	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
-	"github.com/alexey-zayats/claim-parser/internal/model"
 	"go.uber.org/dig"
 )
 
@@ -25,12 +25,12 @@ func NewFileService(di FileServiceDI) *FileService {
 }
 
 // Create ...
-func (s *FileService) Create(data *model.File) error {
+func (s *FileService) Create(data *entity.File) error {
 	return s.repo.Create(data)
 }
 
 // UpdateState ...
-func (s *FileService) UpdateState(data *model.File) error {
+func (s *FileService) UpdateState(data *entity.File) error {
 	return s.repo.UpdateState(data)
 }
 
@@ -40,6 +40,6 @@ func (s *FileService) Delete(id int64) error {
 }
 
 // Read ...
-func (s *FileService) Read(id int64) (*model.File, error) {
+func (s *FileService) Read(id int64) (*entity.File, error) {
 	return s.repo.Read(id)
 }

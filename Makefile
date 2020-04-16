@@ -30,8 +30,8 @@ binary: | ; $(info $(M) building executable…) @ ## Build program binary
 
 MIGRATE = $(GOROOT)/bin/migrate
 $(GOROOT)/bin/migrate: | ; $(info $(M) building migrate…)
-	$Q go get -u -d github.com/golang-migrate/migrate/cli github.com/lib/pq
-	$Q go build -tags 'postgres' -o $(GOROOT)/bin/migrate github.com/golang-migrate/migrate/cli
+	$Q go get -u -d github.com/golang-migrate/migrate/cli github.com/go-sql-driver/mysql
+	$Q go build -tags 'mysql' -o $(GOROOT)/bin/migrate github.com/golang-migrate/migrate/cli
 
 GOLINT = $(GOROOT)/bin/golint
 $(GOROOT)/bin/golint: | ; $(info $(M) building golint…)

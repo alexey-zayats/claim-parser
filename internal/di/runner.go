@@ -16,7 +16,7 @@ type Runner struct {
 }
 
 // Run ...
-func (r *Runner) Run(ctx context.Context, di *Runner, args []string) {
+func (r *Runner) Run(ctx context.Context, args []string) {
 
 	signalChan := make(chan os.Signal)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGABRT, syscall.SIGHUP, syscall.SIGTERM, os.Interrupt, syscall.SIGQUIT)
@@ -28,14 +28,14 @@ func (r *Runner) Run(ctx context.Context, di *Runner, args []string) {
 	// Init Di container
 	container := dig.New()
 
-	for name, iface := range di.Provide {
+	for name, iface := range r.Provide {
 		if err := container.Provide(iface); err != nil {
-			logrus.Fatalf("%: %s", name, err.Error())
+			logrus.Fatalf("%s: %s", name, err.Error())
 		}
 	}
 
 	// Invoke server.Start from di
-	if err := container.Invoke(di.Invoke(childCtx, args)); err != nil {
+	if err := container.Invoke(r.Invoke(childCtx, args)); err != nil {
 		logrus.Fatalf("unable invoke runner interface: %s", err.Error())
 	}
 

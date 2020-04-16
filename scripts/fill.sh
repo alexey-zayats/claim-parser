@@ -3,32 +3,28 @@
 REALPATH=`realpath $0`
 DIRPATH=`dirname $REALPATH`
 
-./scripts/test.sh parse xlsx --path ../data/excel/1.xlsx
-./scripts/test.sh parse formstruct --path ../data/fs/1.txt
-
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e851500497393b7298b4577
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e85150d497393b7298b4578
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e8515194973933f2a8b4582
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e85151e497393702d8b457b
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e851523497393b7298b4579
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e8515294973933f2a8b4583
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e851530497393702d8b457c
-./scripts/test.sh parse fsdump --path ../data/dump/2/form-5e85a1b8497393702d8b458b
-
-./scripts/test.sh parse godoc --path ../data/godoc/1.xlsx
-./scripts/test.sh parse godoc --path ../data/godoc/2.xlsx
-
-./scripts/test.sh parse issued --path ../data/issued/1.xlsx
-./scripts/test.sh parse issued --path ../data/issued/2.xlsx
+for file in $(ls -1 ../data/excel/); do
+./scripts/test.sh parse vehicle xlsx --path ../data/excel/$file
+done
 
 
-exit
+for file in $(ls -1 ../data/fs/); do
+./scripts/test.sh parse vehicle formstruct --path ../data/fs/$file
+done
 
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851500497393b7298b4577
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85150d497393b7298b4578
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e8515194973933f2a8b4582
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85151e497393702d8b457b
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851523497393b7298b4579
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e8515294973933f2a8b4583
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e851530497393702d8b457c
-docker run --rm -v /root/2:/data --env-file /root/claim-parser.env --network=host aazayats/claim-parser parse fsdump --path /data/form-5e85a1b8497393702d8b458b
+for file in $(ls -1 ../data/dump/2/); do
+./scripts/test.sh parse vehicle fsdump --path ../data/dump/2/$file
+done
+
+for file in $(ls -1 ../data/godoc/); do
+./scripts/test.sh parse vehicle gsheet --path ../data/godoc/$file
+done
+
+for file in $(ls -1 ../data/issued/); do
+./scripts/test.sh parse vehicle issued --path ../data/issued/$file
+done
+
+for file in $(ls -1 ../data/people/); do
+./scripts/test.sh parse people gsheet --path ../data/people/$file
+done
+

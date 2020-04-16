@@ -44,16 +44,27 @@ func watcherMain(cmd *cobra.Command, args []string) {
 	di := &di.Runner{
 		Provide: map[string]interface{}{
 			"config":                         config.NewConfig,
-			"database.NewConnection":         database.NewConnection,
-			"repository.NewFileRepository":   repository.NewFileRepository,
-			"repository.NewPassRepository":   repository.NewPassRepository,
-			"repository.NewBidRepository":    repository.NewBidRepository,
-			"repository.NewIssuedRepository": repository.NewIssuedRepository,
-			"service.NewPassService":         services.NewPassService,
-			"service.NewBidService":          services.NewBidService,
-			"service.NewFileService":         services.NewFileService,
-			"services.NewIssuedService":      services.NewIssuedService,
-			"services.NewClaimService":       services.NewClaimService,
+			"database.Connection":            database.NewConnection,
+			"repository.FileRepository":      repository.NewFileRepository,
+			"repository.VehiclePassRepo":     repository.NewVehiclePassRepo,
+			"repository.VehicleBidRepo":      repository.NewVehicleBidRepo,
+			"repository.VehicleIssuedRepo":   repository.NewVehicleIssuedRepo,
+			"repository.PeoplePassRepo":      repository.NewPeoplePassRepo,
+			"repository.PeopleBidRepo":       repository.NewPeopleBidRepo,
+			"repository.PeopleCompanyRepo":   repository.NewPeopleCompanyRepo,
+			"repository.BranchRepository":    repository.NewBranchRepository,
+			"repository.VehicleCompanyRepo":  repository.NewVehicleCompanyRepo,
+			"service.VehiclePassService":     services.NewVehiclePassService,
+			"service.VehicleBidService":      services.NewVehicleBidService,
+			"services.VehicleIssuedService":  services.NewVehicleIssuedService,
+			"services.VehicleClaimService":   services.NewVehicleClaimService,
+			"service.PeoplePassService":      services.NewPeoplePassService,
+			"service.PeopleBidService":       services.NewPeopleBidService,
+			"services.PeopleClaimService":    services.NewPeopleClaimService,
+			"services.PeopleCompanyService":  services.NewPeopleCompanyService,
+			"services.VehicleCompanyService": services.NewVehicleCompanyService,
+			"services.BranchService":         services.NewBranchService,
+			"service.FileService":            services.NewFileService,
 			"services.NewEventService":       services.NewEventService,
 			"watcher.New":                    watcher.New,
 			"command.NewWatcher":             command.NewWatcher,
@@ -67,5 +78,5 @@ func watcherMain(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	di.Run(ctx, di, args)
+	di.Run(ctx, args)
 }

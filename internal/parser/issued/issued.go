@@ -4,57 +4,47 @@ import (
 	"context"
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
 	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"strings"
-	"time"
 )
 
 // Parser ...
 type Parser struct {
+	event *model.Event
+	path  string
+	name  string
 }
-
-// Name ...
-const Name = "issued"
 
 // Register ...
 func Register() {
-	parser.Instance().Add(Name, NewParser)
+	parser.Instance().Add("issued", NewParser)
 }
 
 // NewParser ...
-func NewParser() (parser.Backend, error) {
-	return &Parser{}, nil
+func NewParser(name string) (parser.Backend, error) {
+	return &Parser{
+		name: name,
+	}, nil
+}
+
+// WithEvent ...
+func (p *Parser) WithEvent(event *model.Event) {
+	p.event = event
+	p.path = event.Filepath
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
+func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 
-	var path string
+	logrus.WithFields(logrus.Fields{"name": p.name, "path": p.path, "event": p.event}).Debug("issued.Parse")
 
-	if iface, ok := param.Get("path"); ok {
-		path = iface.(string)
-	} else {
-		return fmt.Errorf("not found 'path' in param dict")
-	}
-
-	var event = &model.Event{
-		CreatedBy: 1,
-	}
-
-	if iface, ok := param.Get("event"); ok {
-		event = iface.(*model.Event)
-	}
-
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("godoc.Parse")
-
-	f, err := excelize.OpenFile(path)
+	f, err := excelize.OpenFile(p.path)
 	if err != nil {
-		return errors.Wrapf(err, "unable open xlsx file %s", path)
+		return errors.Wrapf(err, "unable open xlsx file %s", p.path)
 	}
 
 	var sheetName string
@@ -98,10 +88,10 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				"shipping":        fmt.Sprintf("K%d", i),
 			}
 
-			f.SetCellStyle("Sheet1", axis["issued-at"], axis["issued-at"], dateStyle)
-			f.SetCellStyle("Sheet1", axis["inn"], axis["inn"], numStyle)
-			f.SetCellStyle("Sheet1", axis["ogrn"], axis["ogrn"], numStyle)
-			f.SetCellStyle("Sheet1", axis["ogrn"], axis["ogrn"], numStyle)
+			f.SetCellStyle(sheetName, axis["issued-at"], axis["issued-at"], dateStyle)
+			f.SetCellStyle(sheetName, axis["inn"], axis["inn"], numStyle)
+			f.SetCellStyle(sheetName, axis["ogrn"], axis["ogrn"], numStyle)
+			f.SetCellStyle(sheetName, axis["ogrn"], axis["ogrn"], numStyle)
 
 			var legalBasement string
 			var passNumber string
@@ -145,13 +135,6 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				shipping = 2
 			}
 
-			var issued *time.Time
-			issuedStr := f.GetCellValue(sheetName, axis["issued-at"])
-			if len(issuedStr) > 0 {
-				t := parser.ExcelDateToDate(issuedStr)
-				issued = &t
-			}
-
 			var car string
 			carCell := f.GetCellValue(sheetName, axis["car"])
 			carCell = strings.ToUpper(strings.ReplaceAll(carCell, " ", ""))
@@ -162,9 +145,7 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				car = carCell
 			}
 
-			record := &model.Registry{
-				CompanyInn:     f.GetCellValue(sheetName, axis["inn"]),
-				CompanyOgrn:    f.GetCellValue(sheetName, axis["ogrn"]),
+			record := &model.VehicleRegistry{
 				CompanyName:    f.GetCellValue(sheetName, axis["name"]),
 				CompanyFio:     f.GetCellValue(sheetName, axis["fio"]),
 				CompanyCar:     parser.NormalizeCarNumber(car),
@@ -172,17 +153,26 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 				PassNumber:     passNumber,
 				District:       f.GetCellValue(sheetName, axis["district"]),
 				PassType:       passType,
-				IssuedAt:       issued,
+				IssuedAt:       parser.ExcelDateToDate(f.GetCellValue(sheetName, axis["issued-at"])),
 				RegistryNumber: f.GetCellValue(sheetName, axis["registry-number"]),
 				Shipping:       shipping,
-				Event:          event,
+				Success:        true,
 			}
 
-			out <- record
+			record.CompanyOgrn = util.TrimSpaces(f.GetCellValue(sheetName, axis["inn"]))
+			record.CompanyOgrn = util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"]))
+
+			out <- &model.Out{
+				Kind:  model.OutVehicleRegistry,
+				Event: p.event,
+				Value: record,
+			}
 		}
 	}
 
-	out <- nil
+	out <- &model.Out{
+		Kind: model.OutUnknown,
+	}
 
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/dict"
+	"github.com/alexey-zayats/claim-parser/internal/model"
 	"sort"
 	"strings"
 	"sync"
@@ -11,11 +12,12 @@ import (
 
 // Backend ...
 type Backend interface {
-	Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error
+	WithEvent(event *model.Event)
+	Parse(ctx context.Context, out chan *model.Out) error
 }
 
 // BackendInit ...
-type BackendInit func() (Backend, error)
+type BackendInit func(name string) (Backend, error)
 
 // Parser ...
 type Parser interface {
@@ -34,13 +36,13 @@ var once sync.Once
 func Instance() Parser {
 	if instance == nil {
 		once.Do(func() {
-			instance = new()
+			instance = newParser()
 		})
 	}
 	return instance
 }
 
-func new() *parser {
+func newParser() *parser {
 	return &parser{
 		dict: dict.New(),
 	}
@@ -55,7 +57,7 @@ func (p *parser) Add(name string, init BackendInit) {
 func (p *parser) Backend(name string) (Backend, error) {
 
 	if init, ok := p.dict.Get(name); ok == true {
-		return init.(BackendInit)()
+		return init.(BackendInit)(name)
 	}
 
 	return nil, fmt.Errorf("'%v' isn't one of the '%s'", name, p.registered())

@@ -2,60 +2,48 @@ package excel
 
 import (
 	"context"
-	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/alexey-zayats/claim-parser/internal/dict"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/parser"
+	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"regexp"
 	"strings"
 )
 
 // Parser ...
 type Parser struct {
-	reNumber *regexp.Regexp
+	path  string
+	event *model.Event
+	name  string
 }
-
-// Name ...
-const Name = "excel"
 
 // Register ...
 func Register() {
-	parser.Instance().Add(Name, NewParser)
+	parser.Instance().Add("excel", NewParser)
 }
 
 // NewParser ...
-func NewParser() (parser.Backend, error) {
-	return &Parser{}, nil
+func NewParser(name string) (parser.Backend, error) {
+	return &Parser{
+		name: name,
+	}, nil
+}
+
+// WithEvent ...
+func (p *Parser) WithEvent(event *model.Event) {
+	p.event = event
+	p.path = event.Filepath
 }
 
 // Parse ...
-func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface{}) error {
+func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 
-	param.Foreach(func(s string, i interface{}) {
-		fmt.Printf("%s => %v\n", s, i)
-	})
+	logrus.WithFields(logrus.Fields{"name": p.name, "path": p.path, "event": p.event}).Debug("excel.Parse")
 
-	var path string
-
-	if iface, ok := param.Get("path"); ok {
-		path = iface.(string)
-	} else {
-		return fmt.Errorf("not found 'path' in param dict")
-	}
-
-	var event = &model.Event{}
-	if iface, ok := param.Get("event"); ok {
-		event = iface.(*model.Event)
-	}
-
-	logrus.WithFields(logrus.Fields{"name": Name, "path": path, "event": event}).Debug("excel.Parse")
-
-	f, err := excelize.OpenFile(path)
+	f, err := excelize.OpenFile(p.path)
 	if err != nil {
-		return errors.Wrapf(err, "unable open xlsx file %s", path)
+		return errors.Wrapf(err, "unable open xlsx file %s", p.path)
 	}
 
 	var sheetName string
@@ -64,50 +52,56 @@ func (p *Parser) Parse(ctx context.Context, param *dict.Dict, out chan interface
 		break
 	}
 
+	ok := false
+
 	kind := f.GetCellValue(sheetName, "B5")
 	address := f.GetCellValue(sheetName, "B7")
 
 	source := f.GetCellValue(sheetName, "B12")
 
-	claim := &model.Claim{
+	claim := &model.VehicleClaim{
 		District: f.GetCellValue(sheetName, "A1"),
+
 		Company: model.Company{
 			Activity: strings.ReplaceAll(kind, "\n", ", "),
 			Title:    f.GetCellValue(sheetName, "B6"),
 			Address:  strings.ReplaceAll(address, "\n", ", "),
-			INN:      strings.ReplaceAll(f.GetCellValue(sheetName, "B8"), " ", ""),
 		},
-		Cars:        parser.ParseCars(source),
 		Agreement:   f.GetCellValue(sheetName, "B13"),
 		Reliability: f.GetCellValue(sheetName, "B14"),
-		Reason:      nil,
-		Valid:       true,
 		Source:      source,
-		Event:       event,
+		Success:     true,
 	}
 
-	claim.Company.Head.Contact = model.Contact{
-		Phone: f.GetCellValue(sheetName, "B10"),
-		EMail: f.GetCellValue(sheetName, "B11"),
+	if claim.Company.TIN, ok = parser.ParseInt64(util.TrimSpaces(f.GetCellValue(sheetName, "B8"))); ok == false {
+		claim.Reason = append(claim.Reason, "ИНН не является числом")
+		claim.Success = false
 	}
 
-	fio := strings.Split(f.GetCellValue(sheetName, "B9"), " ")
-
-	if len(fio) < 3 {
-		claim.Valid = false
-		reason := "Нет данных по ФИО руководителя"
-		claim.Reason = &reason
-	} else {
-		claim.Company.Head.FIO = model.FIO{
-			Surname:    fio[0],
-			Name:       fio[1],
-			Patronymic: fio[2],
-		}
+	tdig := util.DigitsCount(claim.Company.TIN)
+	if tdig < 10 || tdig > 12 {
+		claim.Reason = append(claim.Reason, "ИНН меньше 10 или больше 12 знаков")
+		claim.Success = false
 	}
 
-	out <- claim
+	claim.Company.HeadName = strings.TrimSpace(f.GetCellValue(sheetName, "B9"))
+	claim.Company.HeadPhone = util.TrimSpaces(f.GetCellValue(sheetName, "B10"))
+	claim.Company.HeadEmail = util.TrimSpaces(f.GetCellValue(sheetName, "B11"))
 
-	out <- nil
+	if claim.Passes, ok = parser.ParseVehicles(source); ok == false {
+		claim.Reason = append(claim.Reason, "не удалось разобрать список номер/фио")
+		claim.Success = false
+	}
+
+	out <- &model.Out{
+		Kind:  model.OutVehicleClaim,
+		Event: p.event,
+		Value: claim,
+	}
+
+	out <- &model.Out{
+		Kind: model.OutUnknown,
+	}
 
 	return nil
 }

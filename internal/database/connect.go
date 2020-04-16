@@ -5,7 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"time"
 
-	// Register postgres libpq
+	// Register mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/alexey-zayats/claim-parser/internal/config"

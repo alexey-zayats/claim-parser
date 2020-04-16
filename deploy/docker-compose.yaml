@@ -3,7 +3,7 @@ version: "3.7"
 services:
 
   claim-parser:
-    image: aazayats/claim-parser:latest
+    image: aazayats/pass-parser:latest
     command: watch
     restart: always
     env_file:

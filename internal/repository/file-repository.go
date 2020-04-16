@@ -2,8 +2,8 @@ package repository
 
 import (
 	"github.com/alexey-zayats/claim-parser/internal/database"
+	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
-	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -28,7 +28,7 @@ func NewFileRepository(param FilesRepositoryInput) interfaces.FileRepository {
 }
 
 // Create ...
-func (r *FileRepository) Create(data *model.File) error {
+func (r *FileRepository) Create(data *entity.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
@@ -36,12 +36,12 @@ func (r *FileRepository) Create(data *model.File) error {
 
 		res, err := t.Exec(query, data.Filepath, data.Status, data.Log, data.CreatedAt, data.Source)
 		if err != nil {
-			return errors.Wrap(err, "unable update files")
+			return err
 		}
 
 		data.ID, err = res.LastInsertId()
 		if err != nil {
-			return errors.Wrap(err, "unable get files lastInsertID")
+			return err
 		}
 
 		return nil
@@ -55,13 +55,13 @@ func (r *FileRepository) Create(data *model.File) error {
 }
 
 // UpdateState ...
-func (r *FileRepository) UpdateState(data *model.File) error {
+func (r *FileRepository) UpdateState(data *entity.File) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
 		query := "UPDATE files " +
 			"SET " +
-			"status = ?, log = ?, source = ? " +
+			"status = ?, log = concat(log, ?), source = ? " +
 			"WHERE id = ?"
 
 		_, err := t.Exec(query,
@@ -85,8 +85,8 @@ func (r *FileRepository) UpdateState(data *model.File) error {
 }
 
 // Read ...
-func (r *FileRepository) Read(id int64) (*model.File, error) {
-	var file model.File
+func (r *FileRepository) Read(id int64) (*entity.File, error) {
+	var file entity.File
 
 	err := r.db.Get(&file, "SELECT "+
 		"id, filepath, status, log, created_at, source "+
