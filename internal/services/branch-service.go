@@ -30,6 +30,11 @@ func (s *BranchService) Create(data *entity.Branch) error {
 	return s.repo.Create(data)
 }
 
+// FindByName ...
+func (s *BranchService) FindByName(name string) (*entity.Branch, error) {
+	return s.repo.FindByName(name)
+}
+
 // GetAll ...
 func (s *BranchService) GetAll() (map[string]int64, error) {
 	list, err := s.repo.GetAll()

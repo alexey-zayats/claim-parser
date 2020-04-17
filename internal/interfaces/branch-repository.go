@@ -8,4 +8,5 @@ import (
 type BranchRepository interface {
 	GetAll() ([]*entity.Branch, error)
 	Create(data *entity.Branch) error
+	FindByName(name string) (*entity.Branch, error)
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/alexey-zayats/claim-parser/internal/database"
 	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/interfaces"
@@ -50,6 +51,24 @@ func (r *BranchRepository) Create(data *entity.Branch) error {
 	}
 
 	return nil
+}
+
+// FindByName ...
+func (r *BranchRepository) FindByName(name string) (*entity.Branch, error) {
+
+	var record entity.Branch
+
+	query := "SELECT id, name, type FROM branches WHERE name = ?"
+
+	err := r.db.Get(&record, query, name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "unable find branches record by name %s", name)
+	}
+
+	return &record, nil
 }
 
 // GetAll ...

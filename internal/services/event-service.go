@@ -107,7 +107,7 @@ func (s *EventService) vehicleClaim(event *model.Event, claim *model.VehicleClai
 // StoreRegistry ...
 func (s *EventService) vehicleRegistry(event *model.Event, record *model.VehicleRegistry) {
 
-	rec := fmt.Sprintf("%s;%d;%s", record.IssuedAt, record.CompanyInn, record.CompanyName)
+	rec := fmt.Sprintf("%s;%s;%s", record.IssuedAt, record.CompanyInn, record.CompanyName)
 
 	if record.Success {
 

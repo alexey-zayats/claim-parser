@@ -75,10 +75,12 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 	branchID := event.BranchID
 
 	if branchID == 0 {
-		if bid, ok := s.branches[claim.Company.Activity]; ok {
-			branchID = bid
-		} else {
-			branch := &entity.Branch{
+		branch, err := s.branchSvc.FindByName(claim.Company.Activity)
+		if err != nil {
+			return errors.Wrapf(err, "unable find branch by name")
+		}
+		if branch == nil {
+			branch = &entity.Branch{
 				Name: claim.Company.Activity,
 				Type: "Произвольные",
 			}
@@ -87,6 +89,7 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 			}
 			//
 		}
+		branchID = branch.ID
 	}
 
 	if company == nil {
