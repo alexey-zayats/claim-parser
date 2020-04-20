@@ -10,7 +10,7 @@ type PeopleClaim struct {
 
 	Company Company
 
-	Passes []Pass
+	Passes []PeoplePass
 
 	Agreement   string
 	Reliability string

@@ -2,7 +2,7 @@ package model
 
 // VehiclePass ...
 type VehiclePass struct {
-	Pass
+	FIO
 	// Номер машины
 	Number string
 }

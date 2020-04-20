@@ -7,7 +7,7 @@ import (
 )
 
 // ParsePeoples ...
-func ParsePeoples(line string) ([]model.Pass, bool) {
+func ParsePeoples(line string) ([]model.PeoplePass, bool) {
 	line = strings.ReplaceAll(line, "–", "")
 	line = strings.ReplaceAll(line, "—", "")
 	line = strings.ReplaceAll(line, "-", "")
@@ -22,10 +22,10 @@ func ParsePeoples(line string) ([]model.Pass, bool) {
 	success := true
 	var fio model.FIO
 
-	passes := make([]model.Pass, 0)
+	passes := make([]model.PeoplePass, 0)
 	for _, line := range lines {
 		if fio, success = ParseFIO(line); success {
-			passes = append(passes, model.Pass{FIO: fio})
+			passes = append(passes, model.PeoplePass{FIO: fio})
 		}
 	}
 

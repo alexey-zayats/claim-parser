@@ -1,7 +1,7 @@
 package model
 
-// Pass ...
-type Pass struct {
+// PeoplePass ...
+type PeoplePass struct {
 	// ФИО сотрудника
 	FIO FIO
 }

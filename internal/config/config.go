@@ -22,6 +22,19 @@ type Config struct {
 			}
 		}
 	}
+	Amqp struct {
+		Dsn      string
+		Exchange string
+		Workers  int
+		Vehicle  struct {
+			Routing string
+			Queue   string
+		}
+		People struct {
+			Routing string
+			Queue   string
+		}
+	}
 	Watcher struct {
 		Workers int
 		Events  string
@@ -30,6 +43,12 @@ type Config struct {
 		Sheet  string
 		Source string
 		Path   string
+	}
+	Pass struct {
+		Source  int
+		Creator int64
+		Clean   int64
+		Dirty   int64
 	}
 }
 

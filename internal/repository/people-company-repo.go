@@ -70,13 +70,11 @@ func (r *PeopleCompanyRepo) FindByINN(inn int64) (*entity.CompanyPeople, error) 
 func (r *PeopleCompanyRepo) FindByOGRN(ogrn int64) (*entity.CompanyPeople, error) {
 	var record entity.CompanyPeople
 
-	query :=
-		"SELECT " +
-			"id, " +
-			"ogrn, inn, name, branch_id, status " +
-			"FROM " +
+	query := "SELECT " +
+			"id, ogrn, inn, name, branch_id, status " +
+		"FROM " +
 			"companies_people " +
-			"WHERE " +
+		"WHERE " +
 			"ogrn = ?"
 
 	err := r.db.Get(&record, query, ogrn)
