@@ -106,8 +106,7 @@ func (s *VehicleApplicationService) SaveRecord(a *model.Application) error {
 		DistrictID:      a.DistrictID,
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
-		CreatedBy:       s.config.Pass.Creator,
-		UserID:          userID,
+		CreatedBy:       userID,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {
@@ -127,7 +126,7 @@ func (s *VehicleApplicationService) SaveRecord(a *model.Application) error {
 			Patrname:   pass.Middlename,
 			Shipping:   0,
 			CreatedAt:  time.Now(),
-			CreatedBy:  s.config.Pass.Creator,
+			CreatedBy:  userID,
 		}
 
 		if err := s.passSvc.Create(p); err != nil {
