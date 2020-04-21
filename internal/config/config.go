@@ -50,6 +50,7 @@ type Config struct {
 		Clean   int64
 		Dirty   int64
 	}
+	CSV string
 }
 
 // NewConfig ...

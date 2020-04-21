@@ -4,7 +4,6 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
 )
 
@@ -36,12 +35,6 @@ func NewPeopleClaimService(di PeopleClaimServiceDI) *PeopleClaimService {
 		branchSvc:  di.BranchSvc,
 	}
 
-	var err error
-	s.branches, err = s.branchSvc.GetAll()
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable get branches")
-	}
-
 	return s
 }
 
@@ -51,24 +44,10 @@ func (s *PeopleClaimService) SaveRecord(event *model.Event, claim *model.PeopleC
 	var err error
 	var company *entity.CompanyPeople = nil
 
-	//company, err = s.companySvc.FindByOgrnInn(claim.Company.PSRN, claim.Company.TIN)
-	//if err != nil {
-	//	return errors.Wrapf(err, "unable find company by OGRN & INN")
-	//}
-	//
-	//if company == nil {
-	//	company, err = s.companySvc.FindByOGRN(claim.Company.PSRN)
-	//	if err != nil {
-	//		return errors.Wrapf(err, "unable find company by OGRN & INN")
-	//	}
-	//}
-	//
-	//if company == nil {
 	company, err = s.companySvc.FindByINN(claim.Company.TIN)
 	if err != nil {
 		return errors.Wrapf(err, "unable find company by OGRN & INN")
 	}
-	//}
 
 	branchID := event.BranchID
 

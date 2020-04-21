@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/alexey-zayats/claim-parser/internal/queue"
@@ -11,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/dig"
+	"os"
 	"sync"
 )
 
@@ -20,6 +22,7 @@ type Consumer struct {
 	queue   *queue.Queue
 	wg      *sync.WaitGroup
 	appChan chan *model.Application
+	csvChan chan *model.Application
 
 	vehicleSvc *services.VehicleApplicationService
 	peopleSvc  *services.PeopleApplicationService
@@ -44,12 +47,16 @@ func NewConsumer(di ConsumerDI) Command {
 		peopleSvc:  di.PeopleSvc,
 		wg:         &sync.WaitGroup{},
 		appChan:    make(chan *model.Application, 1),
+		csvChan:    make(chan *model.Application),
 	}
 }
 
 // Run ...
 func (c Consumer) Run(ctx context.Context, args []string) error {
 	logrus.WithFields(logrus.Fields{}).Debug("start consumer")
+
+	c.wg.Add(1)
+	go c.writeToCSV(ctx)
 
 	for i := 0; i < c.config.Amqp.Workers; i++ {
 		c.wg.Add(1)
@@ -79,14 +86,17 @@ func (c Consumer) addWorker(ctx context.Context, worker int) {
 		case <-ctx.Done():
 			return
 		case app := <-c.appChan:
+
+			c.csvChan <- app
+
 			switch app.Kind {
 			case model.KindVehicle:
 
 				logrus.WithFields(logrus.Fields{
-					"company":  app.Title,
-					"inn": app.Inn,
-					"ogrn": app.Ogrn,
-					"ceo":    app.CeoName,
+					"company": app.Title,
+					"inn":     app.Inn,
+					"ogrn":    app.Ogrn,
+					"ceo":     app.CeoName,
 				}).Debug("Vehicle.Claim")
 
 				if err := c.vehicleSvc.SaveRecord(app); err != nil {
@@ -97,10 +107,10 @@ func (c Consumer) addWorker(ctx context.Context, worker int) {
 			case model.KindPeople:
 
 				logrus.WithFields(logrus.Fields{
-					"company":  app.Title,
-					"inn": app.Inn,
-					"ogrn": app.Ogrn,
-					"ceo":    app.CeoName,
+					"company": app.Title,
+					"inn":     app.Inn,
+					"ogrn":    app.Ogrn,
+					"ceo":     app.CeoName,
 				}).Debug("People.Claim")
 
 				if err := c.peopleSvc.SaveRecord(app); err != nil {
@@ -178,4 +188,70 @@ func (c *Consumer) applicationDelivery(ctx context.Context, delivery amqp.Delive
 	c.appChan <- application
 
 	queue.Ack(delivery)
+}
+
+func (c *Consumer) writeToCSV(ctx context.Context) {
+	defer c.wg.Done()
+
+	logrus.WithFields(logrus.Fields{}).Debug("csv")
+
+	path := c.config.CSV
+
+	var file *os.File
+	var err error
+
+	_, err = os.Stat(path)
+
+	// create file if not exists
+	if os.IsNotExist(err) {
+		file, err = os.Create(path)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"reason": "err",
+				"file":   path,
+			}).Error("unable create file")
+			return
+		}
+	} else {
+		file, err = os.OpenFile(path, os.O_RDWR, 0644)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"reason": "err",
+				"file":   path,
+			}).Error("unable open file")
+			return
+		}
+	}
+
+	defer file.Close()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case app := <-c.csvChan:
+			for _, p := range app.Passes {
+				line := fmt.Sprintf("%v;%d;%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+					app.Dirty,
+					app.Kind,
+					app.DistrictID,
+					app.PassType,
+					app.Title,
+					app.Inn,
+					app.Ogrn,
+					app.CeoName,
+					app.CeoPhone,
+					app.CeoEmail,
+					p.Car,
+					p.Lastname,
+					p.Firstname,
+					p.Middlename,
+					app.ActivityKind,
+					app.Agreement,
+					app.Reliability)
+
+				file.WriteString(line)
+			}
+		}
+	}
 }

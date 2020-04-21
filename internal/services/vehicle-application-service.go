@@ -121,13 +121,13 @@ func (s *VehicleApplicationService) SaveRecord(a *model.Application) error {
 			Source:     s.config.Pass.Source,
 			DistrictID: a.DistrictID,
 			PassType:   a.PassType,
-			Car: pass.Car,
+			Car:        pass.Car,
 			Lastname:   pass.Lastname,
 			Firstname:  pass.Firstname,
 			Patrname:   pass.Middlename,
 			Shipping:   0,
 			CreatedAt:  time.Now(),
-			CreatedBy: s.config.Pass.Creator,
+			CreatedBy:  s.config.Pass.Creator,
 		}
 
 		if err := s.passSvc.Create(p); err != nil {

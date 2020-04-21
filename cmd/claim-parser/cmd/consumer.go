@@ -45,6 +45,8 @@ func init() {
 		{Name: "pass-creator", Value: 0, Usage: "pass creator", ViperBind: "Pass.Creator"},
 		{Name: "pass-clean", Value: 0, Usage: "clean pass operator", ViperBind: "Pass.Clean"},
 		{Name: "pass-dirty", Value: 0, Usage: "dirty pass operator", ViperBind: "Pass.Dirty"},
+
+		{Name: "csv", Value: "claims.csv", Usage: "csv file", ViperBind: "CSV"},
 	}
 
 	config.Apply(consumerCmd, cfgParams)
