@@ -9,8 +9,11 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"regexp"
 	"strings"
 )
+
+var re = regexp.MustCompile(`((?:\p{L}{1})(?:\s+)?(?:\d{3})(?:\s+)?(?:\p{L}{2})(?:\s+)?(?:\d{2,3})\s?(?i:rus?)?)`)
 
 // Parser ...
 type Parser struct {
@@ -145,12 +148,18 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 				car = carCell
 			}
 
+			if re.MatchString(car) {
+				car = parser.NormalizeCarNumber(car)
+			} else {
+				car = util.TrimNumber(car)
+			}
+
 			record := &model.VehicleRegistry{
 				CompanyOgrn:    util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"])),
 				CompanyInn:     util.TrimSpaces(f.GetCellValue(sheetName, axis["inn"])),
 				CompanyName:    f.GetCellValue(sheetName, axis["name"]),
 				CompanyFio:     f.GetCellValue(sheetName, axis["fio"]),
-				CompanyCar:     parser.NormalizeCarNumber(car),
+				CompanyCar:     car,
 				LegalBasement:  legalBasement,
 				PassNumber:     passNumber,
 				District:       f.GetCellValue(sheetName, axis["district"]),

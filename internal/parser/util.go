@@ -2,7 +2,6 @@ package parser
 
 import (
 	"github.com/alexey-zayats/claim-parser/internal/model"
-	"github.com/alexey-zayats/claim-parser/internal/util"
 	"regexp"
 	"strconv"
 	"strings"
@@ -74,7 +73,7 @@ func NormalizeCarNumber(number string) string {
 		}
 	}
 
-	return util.TrimNumber(string(rnum))
+	return string(rnum)
 }
 
 var (

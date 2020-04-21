@@ -152,7 +152,8 @@ func parseCar(item string) ([]model.VehiclePass, bool) {
 	for _, pair := range pairs {
 
 		pass := model.VehiclePass{
-			Number: NormalizeCarNumber(strings.ToUpper(util.TrimSpaces(pair.Key))),
+
+			Number: util.TrimNumber(NormalizeCarNumber(strings.ToUpper(util.TrimSpaces(pair.Key)))),
 		}
 
 		pass.FIO, success = ParseFIO(pair.Value)

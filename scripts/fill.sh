@@ -28,3 +28,12 @@ for file in $(ls -1 ../data/people/); do
 ./scripts/test.sh parse people gsheet --path ../data/people/$file
 done
 
+DELETE FROM passes;
+DELETE FROM bids;
+DELETE FROM companies;
+DELETE FROM issued;
+
+DELETE FROM passes_people;
+DELETE FROM bids_people;
+DELETE FROM companies_people;
+DELETE FROM issued_people;

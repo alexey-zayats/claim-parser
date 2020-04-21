@@ -11,9 +11,6 @@ set -ex
 
 BRANCH=`git branch | sed -n '/\* /s///p'`
 
-REGISTRY=dockereg.athletic.cloud
-IMAGE=itube-meta-$BRANCH
-
 docker run --rm -v "$PWD":/app treeder/bump patch
 
 VERSION=`cat VERSION`
@@ -25,3 +22,14 @@ git commit -m "version $VERSION"
 git tag -a "$VERSION" -m "version $VERSION"
 git push origin $BRANCH
 git push --tags
+
+REGISTRY_URL=aazayats
+
+IMAGE=${REGISTRY_URL}/claim-parser
+VERSION=$(cat VERSION)
+
+docker build -t ${IMAGE} .
+docker tag ${IMAGE}:latest ${IMAGE}:${VERSION}
+
+docker push ${IMAGE}:${VERSION}
+docker push ${IMAGE}:latest
