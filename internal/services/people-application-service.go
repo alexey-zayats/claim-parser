@@ -106,8 +106,7 @@ func (s *PeopleApplicationService) SaveRecord(a *model.Application) error {
 		DistrictID:      a.DistrictID,
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
-		CreatedBy:       s.config.Pass.Creator,
-		UserID:          userID,
+		CreatedBy:       userID,
 	}
 
 	if a.Dirty {
