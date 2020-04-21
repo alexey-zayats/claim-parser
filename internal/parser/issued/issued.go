@@ -146,6 +146,8 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 			}
 
 			record := &model.VehicleRegistry{
+				CompanyOgrn:    util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"])),
+				CompanyInn:     util.TrimSpaces(f.GetCellValue(sheetName, axis["inn"])),
 				CompanyName:    f.GetCellValue(sheetName, axis["name"]),
 				CompanyFio:     f.GetCellValue(sheetName, axis["fio"]),
 				CompanyCar:     parser.NormalizeCarNumber(car),
@@ -158,9 +160,6 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 				Shipping:       shipping,
 				Success:        true,
 			}
-
-			record.CompanyOgrn = util.TrimSpaces(f.GetCellValue(sheetName, axis["inn"]))
-			record.CompanyOgrn = util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"]))
 
 			out <- &model.Out{
 				Kind:  model.OutVehicleRegistry,

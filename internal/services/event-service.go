@@ -116,6 +116,8 @@ func (s *EventService) vehicleRegistry(event *model.Event, record *model.Vehicle
 			"district": event.DistrictID,
 			"car":      record.CompanyCar,
 			"pass":     record.PassNumber,
+			"inn":      record.CompanyInn,
+			"ogrn":     record.CompanyOgrn,
 		}).Debug("Vehicle.Registry")
 
 		if err := s.vis.SaveRecord(event, record); err != nil {
