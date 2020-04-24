@@ -346,7 +346,11 @@ func (c *Consumer) vehicleCSV(ctx context.Context) {
 					app.Agreement,
 					app.Reliability)
 
-				file.WriteString(line)
+				logrus.Debug(line)
+
+				if _, err := file.WriteString(line); err != nil {
+					logrus.Error(err)
+				}
 			}
 
 		}
@@ -391,7 +395,11 @@ func (c *Consumer) peopleCSV(ctx context.Context) {
 					app.Agreement,
 					app.Reliability)
 
-				file.WriteString(line)
+				logrus.Debug(line)
+
+				if _, err := file.WriteString(line); err != nil {
+					logrus.Error(err)
+				}
 			}
 		}
 	}
@@ -436,7 +444,11 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 					app.Agreement,
 					app.Reliability)
 
-				file.WriteString(line)
+				logrus.Debug(line)
+
+				if _, err := file.WriteString(line); err != nil {
+					logrus.Error(err)
+				}
 			}
 
 		}
