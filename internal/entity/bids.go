@@ -35,8 +35,8 @@ type Bid struct {
 	AddressWhere      string    `db:"address_where"`
 	WhoNeedsHelpPhone string    `db:"phone_where"`
 	WhoNeedsHelp      string    `db:"fio_where"`
-	DateFrom          time.Time    `db:"from"`
-	DateTo            time.Time    `db:"to"`
+	DateFrom          time.Time `db:"from"`
+	DateTo            time.Time `db:"to"`
 	OtherReason       string    `db:"reason"`
 	DocLinks          string    `db:"link"`
 }

@@ -63,12 +63,13 @@ func (r *VehicleBidRepo) Create(data *entity.Bid) error {
 			data.CreatedBy,
 			data.UserID,
 			data.Source,
+
 			data.CityFrom,
-			data.CityTo,
 			data.AddressDest,
-			data.AddressWhere,
 			data.WhoNeedsHelpPhone,
 			data.WhoNeedsHelp,
+			data.CityTo,
+			data.AddressWhere,
 			data.DateFrom,
 			data.DateTo,
 			data.OtherReason,
@@ -128,16 +129,19 @@ func (r *VehicleBidRepo) Update(data *entity.Bid) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.UserID,
+			data.Source,
+
 			data.CityFrom,
-			data.CityTo,
 			data.AddressDest,
-			data.AddressWhere,
 			data.WhoNeedsHelpPhone,
 			data.WhoNeedsHelp,
+			data.CityTo,
+			data.AddressWhere,
 			data.DateFrom,
 			data.DateTo,
 			data.OtherReason,
 			data.DocLinks,
+
 			data.ID)
 
 		if err != nil {

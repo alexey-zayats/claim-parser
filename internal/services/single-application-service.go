@@ -118,7 +118,7 @@ func (s *SingleApplicationService) SaveRecord(a *application.Single) error {
 
 	bid := &entity.Bid{
 		BranchID:          a.ActivityKind,
-		CompanyID: 1,
+		CompanyID:         company.ID,
 		CompanyName:       a.Title,
 		CompanyAddress:    a.Address,
 		CompanyCeoPhone:   a.CeoPhone,

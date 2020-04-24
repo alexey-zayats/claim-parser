@@ -48,7 +48,7 @@ func NewConsumer(di ConsumerDI) Command {
 		queue:      di.Queue,
 		vehicleSvc: di.VehicleSvc,
 		peopleSvc:  di.PeopleSvc,
-		singleSvc: di.SingleSvc,
+		singleSvc:  di.SingleSvc,
 		wg:         &sync.WaitGroup{},
 		appChan:    make(chan interface{}, 1),
 		csvChan:    make(chan interface{}),
