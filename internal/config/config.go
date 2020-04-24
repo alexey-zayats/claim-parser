@@ -34,6 +34,10 @@ type Config struct {
 			Routing string
 			Queue   string
 		}
+		Single struct {
+			Routing string
+			Queue   string
+		}
 	}
 	Watcher struct {
 		Workers int
@@ -45,12 +49,13 @@ type Config struct {
 		Path   string
 	}
 	Pass struct {
-		Source  int
-		Creator int64
-		Clean   int64
-		Dirty   int64
+		Source int
 	}
-	CSV string
+	CSV struct {
+		Vehicle string
+		People  string
+		Single  string
+	}
 }
 
 // NewConfig ...

@@ -1,9 +1,10 @@
 package services
 
 import (
+	"fmt"
+	"github.com/alexey-zayats/claim-parser/internal/application"
 	"github.com/alexey-zayats/claim-parser/internal/config"
 	"github.com/alexey-zayats/claim-parser/internal/entity"
-	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
 	"time"
@@ -16,6 +17,8 @@ type PeopleApplicationService struct {
 	passSvc    *PeoplePassService
 	companySvc *PeopleCompanyService
 	branchSvc  *BranchService
+	sourceSvc  *SourceService
+	routingSvc *RoutingService
 }
 
 // PeopleApplicationServiceDI ...
@@ -26,6 +29,8 @@ type PeopleApplicationServiceDI struct {
 	PassSvc    *PeoplePassService
 	CompanySvc *PeopleCompanyService
 	BranchSvc  *BranchService
+	SourceSvc  *SourceService
+	RoutingSvc *RoutingService
 }
 
 // NewPeopleApplicationService ...
@@ -37,13 +42,15 @@ func NewPeopleApplicationService(di PeopleApplicationServiceDI) *PeopleApplicati
 		passSvc:    di.PassSvc,
 		companySvc: di.CompanySvc,
 		branchSvc:  di.BranchSvc,
+		sourceSvc:  di.SourceSvc,
+		routingSvc: di.RoutingSvc,
 	}
 
 	return s
 }
 
 // SaveRecord ...
-func (s *PeopleApplicationService) SaveRecord(a *model.Application) error {
+func (s *PeopleApplicationService) SaveRecord(a *application.People) error {
 
 	var err error
 	var company *entity.CompanyPeople = nil
@@ -84,13 +91,24 @@ func (s *PeopleApplicationService) SaveRecord(a *model.Application) error {
 		}
 	}
 
-	userID := int64(0)
-
-	if a.Dirty {
-		userID = s.config.Pass.Dirty
-	} else {
-		userID = s.config.Pass.Clean
+	sourceName := "form.single"
+	source, err := s.sourceSvc.FindByName(sourceName)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find source with name %s", sourceName)
 	}
+	if source == nil {
+		return fmt.Errorf("unable to find source with name %s", sourceName)
+	}
+
+	routing, err := s.routingSvc.FindBySourceDistrict(source.ID, a.DistrictID)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find routing by source(%d) and district(%d)", source.ID, a.DistrictID)
+	}
+	if routing == nil {
+		return fmt.Errorf("unable to find routing by source(%d) and district(%d)", source.ID, a.DistrictID)
+	}
+
+	userID := routing.CleanID
 
 	bid := &entity.BidPeople{
 		CompanyID:       company.ID,
@@ -107,12 +125,6 @@ func (s *PeopleApplicationService) SaveRecord(a *model.Application) error {
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
 		CreatedBy:       userID,
-	}
-
-	if a.Dirty {
-		bid.UserID = s.config.Pass.Dirty
-	} else {
-		bid.UserID = s.config.Pass.Clean
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {

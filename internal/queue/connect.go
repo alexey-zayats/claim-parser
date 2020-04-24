@@ -52,7 +52,7 @@ func (c *Connection) establishConnection() *amqp.Connection {
 		logrus.WithFields(logrus.Fields{
 			"reason": err.Error(),
 			"dns":    c.conf.Amqp.Dsn,
-		}).Error("Error connecy to AMQP")
+		}).Error("Error connect to AMQP")
 
 		logrus.WithFields(logrus.Fields{
 			"dns": c.conf.Amqp.Dsn,

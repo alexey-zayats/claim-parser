@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
@@ -14,6 +15,8 @@ type VehicleClaimService struct {
 	issuedSvc  *VehicleIssuedService
 	companySvc *VehicleCompanyService
 	branchSvc  *BranchService
+	sourceSvc  *SourceService
+	routingSvc *RoutingService
 }
 
 // VehicleClaimServiceDI ...
@@ -24,6 +27,8 @@ type VehicleClaimServiceDI struct {
 	IssuedSvc  *VehicleIssuedService
 	CompanySvc *VehicleCompanyService
 	BranchSvc  *BranchService
+	SourceSvc  *SourceService
+	RoutingSvc *RoutingService
 }
 
 // NewVehicleClaimService ...
@@ -34,6 +39,8 @@ func NewVehicleClaimService(di VehicleClaimServiceDI) *VehicleClaimService {
 		issuedSvc:  di.IssuedSvc,
 		companySvc: di.CompanySvc,
 		branchSvc:  di.BranchSvc,
+		sourceSvc:  di.SourceSvc,
+		routingSvc: di.RoutingSvc,
 	}
 
 	return s
@@ -95,6 +102,31 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		}
 	}
 
+	sourceName := "gsheet-vehicle"
+	source, err := s.sourceSvc.FindByName(sourceName)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find source with name %s", sourceName)
+	}
+	if source == nil {
+		return fmt.Errorf("unable to find source with name %s", sourceName)
+	}
+
+	routing, err := s.routingSvc.FindBySourceDistrict(source.ID, event.DistrictID)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find routing by source(%d) and district(%d)", source.ID, event.DistrictID)
+	}
+	if routing == nil {
+		return fmt.Errorf("unable to find routing by source(%d) and district(%d)", source.ID, event.DistrictID)
+	}
+
+	userID := int64(0)
+
+	if claim.Success {
+		userID = routing.DirtyID
+	} else {
+		userID = routing.CleanID
+	}
+
 	bid := &entity.Bid{
 		CompanyID:       company.ID,
 		FileID:          event.FileID,
@@ -111,7 +143,7 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		PassType:        event.PassType,
 		CreatedAt:       claim.Created,
 		CreatedBy:       event.CreatedBy,
-		UserID:          event.CreatedBy,
+		UserID:          userID,
 		Source:          claim.Source,
 		Agree:           1,
 		Confirm:         1,

@@ -38,8 +38,10 @@ func (r *VehicleBidRepo) Create(data *entity.Bid) error {
 			"company_ceo_email, company_ceo_name," +
 			"agree, confirm, " +
 			"workflow_status, code, district_id, pass_type, " +
-			"created_at, created_by, user_id, source" +
-			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"created_at, created_by, user_id, source, " +
+			"city, who_address, phone_where, fio_where, city_where, " +
+			"address_where, `from`, `to`, reason, link" +
+			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 		res, err := t.Exec(query,
 			data.FileID,
@@ -60,7 +62,18 @@ func (r *VehicleBidRepo) Create(data *entity.Bid) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.UserID,
-			data.Source)
+			data.Source,
+			data.CityFrom,
+			data.CityTo,
+			data.AddressDest,
+			data.AddressWhere,
+			data.WhoNeedsHelpPhone,
+			data.WhoNeedsHelp,
+			data.DateFrom,
+			data.DateTo,
+			data.OtherReason,
+			data.DocLinks,
+		)
 
 		if err != nil {
 			return errors.Wrap(err, "unable create bid")
@@ -92,7 +105,9 @@ func (r *VehicleBidRepo) Update(data *entity.Bid) error {
 			"company_ceo_email = ?, company_ceo_name = ?," +
 			"agree = ?, confirm = ?, " +
 			"workflow_status = ?, code = ?, district_id = ?, pass_type = ?, " +
-			"created_at = ?, created_by = ?, user_id = ?, source = ? " +
+			"created_at = ?, created_by = ?, user_id = ?, source = ?, " +
+			"city = ?, who_address = ?, phone_where = ?, fio_where = ?, city_where = ?, " +
+			"address_where = ?, `from` = ?, `to` = ?, reason = ?, link = ?" +
 			"WHERE id = ?"
 		_, err := t.Exec(sql,
 			data.FileID,
@@ -113,6 +128,16 @@ func (r *VehicleBidRepo) Update(data *entity.Bid) error {
 			data.CreatedAt,
 			data.CreatedBy,
 			data.UserID,
+			data.CityFrom,
+			data.CityTo,
+			data.AddressDest,
+			data.AddressWhere,
+			data.WhoNeedsHelpPhone,
+			data.WhoNeedsHelp,
+			data.DateFrom,
+			data.DateTo,
+			data.OtherReason,
+			data.DocLinks,
 			data.ID)
 
 		if err != nil {
@@ -140,7 +165,9 @@ func (r *VehicleBidRepo) Read(id int64) (*entity.Bid, error) {
 		"company_ceo_email, company_ceo_name,"+
 		"agree, confirm, "+
 		"workflow_status, code, district_id, pass_type, "+
-		"created_at, created_by, user_id, source "+
+		"created_at, created_by, user_id, source, "+
+		"city, who_address, phone_where, fio_where, city_where, "+
+		"address_where, `from`, `to`, reason, link "+
 		"FROM bids WHERE id = ?", id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable get bids record by id %s", id)

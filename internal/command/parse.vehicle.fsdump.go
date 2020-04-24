@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
-	"strings"
 	"sync"
 	"time"
 )
@@ -109,25 +108,14 @@ func (cmd *VehicleFSDumpParser) HandleParsed(ctx context.Context) {
 				claim := out.Value.(*model.VehicleClaim)
 				rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
 
-				if claim.Success {
+				logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
 
-					logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
+				if err := cmd.claimCvs.SaveRecord(out.Event, claim); err != nil {
 
-					if err := cmd.claimCvs.SaveRecord(out.Event, claim); err != nil {
+					logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
 
-						logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save claim")
-
-						cmd.file.Log = rec + ";sql: " + err.Error() + "\n"
-						cmd.file.Status = 3
-
-						if err := cmd.fileSvc.UpdateState(cmd.file); err != nil {
-							logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update file state")
-						}
-					}
-				} else {
-
-					cmd.file.Log = rec + ";parse: " + strings.Join(claim.Reason, ", ") + "\n"
-					cmd.file.Status = 2
+					cmd.file.Log = rec + ";sql: " + err.Error() + "\n"
+					cmd.file.Status = 3
 
 					if err := cmd.fileSvc.UpdateState(cmd.file); err != nil {
 						logrus.WithFields(logrus.Fields{"reason": err}).Error("unable update file state")

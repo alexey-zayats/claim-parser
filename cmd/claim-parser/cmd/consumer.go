@@ -41,12 +41,14 @@ func init() {
 		{Name: "amqp-people-routing", Value: "form.people", Usage: "people form routing key", ViperBind: "Amqp.People.Routing"},
 		{Name: "amqp-people-queue", Value: "form.people", Usage: "people form queue name", ViperBind: "Amqp.People.Queue"},
 
-		{Name: "pass-source", Value: 0, Usage: "pass source", ViperBind: "Pass.Source"},
-		{Name: "pass-creator", Value: 0, Usage: "pass creator", ViperBind: "Pass.Creator"},
-		{Name: "pass-clean", Value: 0, Usage: "clean pass operator", ViperBind: "Pass.Clean"},
-		{Name: "pass-dirty", Value: 0, Usage: "dirty pass operator", ViperBind: "Pass.Dirty"},
+		{Name: "amqp-single-routing", Value: "form.single", Usage: "single form routing key", ViperBind: "Amqp.Single.Routing"},
+		{Name: "amqp-single-queue", Value: "form.single", Usage: "single form queue name", ViperBind: "Amqp.Single.Queue"},
 
-		{Name: "csv", Value: "claims.csv", Usage: "csv file", ViperBind: "CSV"},
+		{Name: "pass-source", Value: 0, Usage: "pass source", ViperBind: "Pass.Source"},
+
+		{Name: "csv-vehicle", Value: "vehicle.csv", Usage: "vehicle csv file", ViperBind: "CSV.Vehicle"},
+		{Name: "csv-people", Value: "people.csv", Usage: "people csv file", ViperBind: "CSV.People"},
+		{Name: "csv-single", Value: "single.csv", Usage: "single csv file", ViperBind: "CSV.Single"},
 	}
 
 	config.Apply(consumerCmd, cfgParams)
@@ -70,6 +72,8 @@ func consumerMain(cmd *cobra.Command, args []string) {
 			"repository.PeopleCompanyRepo":       repository.NewPeopleCompanyRepo,
 			"repository.BranchRepository":        repository.NewBranchRepository,
 			"repository.VehicleCompanyRepo":      repository.NewVehicleCompanyRepo,
+			"repository.NewSourceRepository":     repository.NewSourceRepository,
+			"repository.NewRoutingRepository":    repository.NewRoutingRepository,
 			"service.VehiclePassService":         services.NewVehiclePassService,
 			"service.VehicleBidService":          services.NewVehicleBidService,
 			"services.VehicleIssuedService":      services.NewVehicleIssuedService,
@@ -84,6 +88,9 @@ func consumerMain(cmd *cobra.Command, args []string) {
 			"services.EventService":              services.NewEventService,
 			"services.VehicleApplicationService": services.NewVehicleApplicationService,
 			"services.PeopleApplicationService":  services.NewPeopleApplicationService,
+			"services.SingleApplicationService":  services.NewSingleApplicationService,
+			"services.SourceService":             services.NewSourceService,
+			"services.NewRoutingService":         services.NewRoutingService,
 			"command.Watcher":                    command.NewConsumer,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {

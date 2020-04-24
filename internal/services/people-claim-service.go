@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
@@ -13,7 +14,8 @@ type PeopleClaimService struct {
 	passSvc    *PeoplePassService
 	companySvc *PeopleCompanyService
 	branchSvc  *BranchService
-	branches   map[string]int64
+	sourceSvc  *SourceService
+	routingSvc *RoutingService
 }
 
 // PeopleClaimServiceDI ...
@@ -23,6 +25,8 @@ type PeopleClaimServiceDI struct {
 	PassSvc    *PeoplePassService
 	CompanySvc *PeopleCompanyService
 	BranchSvc  *BranchService
+	SourceSvc  *SourceService
+	RoutingSvc *RoutingService
 }
 
 // NewPeopleClaimService ...
@@ -33,6 +37,8 @@ func NewPeopleClaimService(di PeopleClaimServiceDI) *PeopleClaimService {
 		passSvc:    di.PassSvc,
 		companySvc: di.CompanySvc,
 		branchSvc:  di.BranchSvc,
+		sourceSvc:  di.SourceSvc,
+		routingSvc: di.RoutingSvc,
 	}
 
 	return s
@@ -95,6 +101,31 @@ func (s *PeopleClaimService) SaveRecord(event *model.Event, claim *model.PeopleC
 		}
 	}
 
+	sourceName := "gsheet-people"
+	source, err := s.sourceSvc.FindByName(sourceName)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find source with name %s", sourceName)
+	}
+	if source == nil {
+		return fmt.Errorf("unable to find source with name %s", sourceName)
+	}
+
+	routing, err := s.routingSvc.FindBySourceDistrict(source.ID, event.DistrictID)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find routing by source(%d) and district(%d)", source.ID, event.DistrictID)
+	}
+	if routing == nil {
+		return fmt.Errorf("unable to find routing by source(%d) and district(%d)", source.ID, event.DistrictID)
+	}
+
+	userID := int64(0)
+
+	if claim.Success {
+		userID = routing.DirtyID
+	} else {
+		userID = routing.CleanID
+	}
+
 	bid := &entity.BidPeople{
 		FileID:          event.FileID,
 		CompanyID:       company.ID,
@@ -112,7 +143,7 @@ func (s *PeopleClaimService) SaveRecord(event *model.Event, claim *model.PeopleC
 		PassType:        event.PassType,
 		Source:          claim.Source,
 		CreatedAt:       claim.Created,
-		CreatedBy:       event.CreatedBy,
+		CreatedBy:       userID,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {

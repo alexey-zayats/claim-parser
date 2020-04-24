@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// VehicleApplicationService ...
-type VehicleApplicationService struct {
+// SingleApplicationService ...
+type SingleApplicationService struct {
 	config     *config.Config
 	bidSvc     *VehicleBidService
 	passSvc    *VehiclePassService
@@ -21,8 +21,8 @@ type VehicleApplicationService struct {
 	routingSvc *RoutingService
 }
 
-// VehicleApplicationServiceDI ...
-type VehicleApplicationServiceDI struct {
+// SingleApplicationServiceDI ...
+type SingleApplicationServiceDI struct {
 	dig.In
 	Config     *config.Config
 	BidSvc     *VehicleBidService
@@ -33,10 +33,10 @@ type VehicleApplicationServiceDI struct {
 	RoutingSvc *RoutingService
 }
 
-// NewVehicleApplicationService ...
-func NewVehicleApplicationService(di VehicleApplicationServiceDI) *VehicleApplicationService {
+// NewSingleApplicationService ...
+func NewSingleApplicationService(di SingleApplicationServiceDI) *SingleApplicationService {
 
-	s := &VehicleApplicationService{
+	s := &SingleApplicationService{
 		config:     di.Config,
 		bidSvc:     di.BidSvc,
 		passSvc:    di.PassSvc,
@@ -50,7 +50,7 @@ func NewVehicleApplicationService(di VehicleApplicationServiceDI) *VehicleApplic
 }
 
 // SaveRecord ...
-func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
+func (s *SingleApplicationService) SaveRecord(a *application.Single) error {
 
 	var err error
 	var company *entity.Company = nil
@@ -64,7 +64,7 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 		company = &entity.Company{
 			OGRN:     a.Ogrn,
 			INN:      a.Inn,
-			Name:     a.Title,
+			Name:     a.CeoName,
 			BranchID: a.ActivityKind,
 			Status:   0,
 		}
@@ -91,7 +91,7 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 		}
 	}
 
-	sourceName := "form.vehicle"
+	sourceName := "form.single"
 	source, err := s.sourceSvc.FindByName(sourceName)
 	if err != nil {
 		return errors.Wrapf(err, "unable to find source with name %s", sourceName)
@@ -117,20 +117,30 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 	}
 
 	bid := &entity.Bid{
-		CompanyID:       company.ID,
-		BranchID:        a.ActivityKind,
-		CompanyName:     a.Title,
-		CompanyAddress:  a.Address,
-		CompanyCeoPhone: a.CeoPhone,
-		CompanyCeoEmail: a.CeoEmail,
-		CompanyCeoName:  a.CeoName,
-		Agree:           a.Agreement,
-		Confirm:         a.Reliability,
-		WorkflowStatus:  1,
-		DistrictID:      a.DistrictID,
-		PassType:        a.PassType,
-		CreatedAt:       time.Now(),
-		CreatedBy:       userID,
+		BranchID:          a.ActivityKind,
+		CompanyID: 1,
+		CompanyName:       a.Title,
+		CompanyAddress:    a.Address,
+		CompanyCeoPhone:   a.CeoPhone,
+		CompanyCeoEmail:   a.CeoEmail,
+		CompanyCeoName:    a.CeoName,
+		Agree:             a.Agreement,
+		Confirm:           a.Reliability,
+		WorkflowStatus:    1,
+		DistrictID:        a.DistrictID,
+		PassType:          a.PassType,
+		CreatedAt:         time.Now(),
+		CreatedBy:         userID,
+		CityFrom:          a.CityFrom,
+		CityTo:            a.CityTo,
+		AddressDest:       a.AddressDest,
+		AddressWhere:      a.Address,
+		WhoNeedsHelpPhone: a.WhoNeedsHelpPhone,
+		WhoNeedsHelp:      a.WhoNeedsHelp,
+		DateFrom:          a.DateFrom,
+		DateTo:            a.DateTo,
+		OtherReason:       a.OtherReason,
+		DocLinks:          a.DocLinks,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {

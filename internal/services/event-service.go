@@ -69,16 +69,11 @@ func (s *EventService) peopleClaim(event *model.Event, claim *model.PeopleClaim)
 
 	rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
 
-	if claim.Success {
-		if err := s.pcs.SaveRecord(event, claim); err != nil {
-			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
-			log := rec + ";sql: " + err.Error()
-			s.UpdateFile(event.FileID, 3, log, claim.Source)
-			return
-		}
-	} else {
-		log := rec + ";parse: " + strings.Join(claim.Reason, ", ") + "\n"
-		s.UpdateFile(event.FileID, 1, log, claim.Source)
+	if err := s.pcs.SaveRecord(event, claim); err != nil {
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
+		log := rec + ";sql: " + err.Error()
+		s.UpdateFile(event.FileID, 3, log, claim.Source)
+		return
 	}
 }
 
@@ -91,16 +86,11 @@ func (s *EventService) vehicleClaim(event *model.Event, claim *model.VehicleClai
 
 	rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
 
-	if claim.Success {
-		if err := s.vcs.SaveRecord(event, claim); err != nil {
-			logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
-			log := rec + ";sql: " + err.Error()
-			s.UpdateFile(event.FileID, 3, log, claim.Source)
-			return
-		}
-	} else {
-		log := rec + ";parse: " + strings.Join(claim.Reason, ", ") + "\n"
-		s.UpdateFile(event.FileID, 1, log, "")
+	if err := s.vcs.SaveRecord(event, claim); err != nil {
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
+		log := rec + ";sql: " + err.Error()
+		s.UpdateFile(event.FileID, 3, log, claim.Source)
+		return
 	}
 }
 
