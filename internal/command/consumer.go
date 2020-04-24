@@ -346,8 +346,6 @@ func (c *Consumer) vehicleCSV(ctx context.Context) {
 					app.Agreement,
 					app.Reliability)
 
-				logrus.Debug(line)
-
 				if _, err := file.WriteString(line); err != nil {
 					logrus.Error(err)
 				}
@@ -395,8 +393,6 @@ func (c *Consumer) peopleCSV(ctx context.Context) {
 					app.Agreement,
 					app.Reliability)
 
-				logrus.Debug(line)
-
 				if _, err := file.WriteString(line); err != nil {
 					logrus.Error(err)
 				}
@@ -427,7 +423,7 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 		case app := <-c.sChan:
 
 			for _, p := range app.Passes {
-				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
 					app.DistrictID,
 					app.PassType,
 					app.Title,
@@ -442,9 +438,16 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 					p.Middlename,
 					app.ActivityKind,
 					app.Agreement,
-					app.Reliability)
-
-				logrus.Debug(line)
+					app.Reliability,
+					app.CityFrom,
+					app.CityTo,
+					app.AddressDest,
+					app.DateFrom,
+					app.DateTo,
+					app.OtherReason,
+					app.WhoNeedsHelp,
+					app.WhoNeedsHelpPhone,
+					app.DocLinks,)
 
 				if _, err := file.WriteString(line); err != nil {
 					logrus.Error(err)
