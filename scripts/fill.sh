@@ -28,6 +28,7 @@ for file in $(ls -1 ../data/people/); do
 ./scripts/test.sh parse people gsheet --path ../data/people/$file
 done
 
+
 DELETE FROM passes;
 DELETE FROM bids;
 DELETE FROM companies;
@@ -37,3 +38,13 @@ DELETE FROM passes_people;
 DELETE FROM bids_people;
 DELETE FROM companies_people;
 DELETE FROM issued_people;
+
+ALTER TABLE passes AUTO_INCREMENT = 1;
+ALTER TABLE bids AUTO_INCREMENT = 1;
+ALTER TABLE companies AUTO_INCREMENT = 1;
+ALTER TABLE issued AUTO_INCREMENT = 1;
+
+ALTER TABLE passes_people AUTO_INCREMENT = 1;
+ALTER TABLE bids_people AUTO_INCREMENT = 1;
+ALTER TABLE companies_people AUTO_INCREMENT = 1;
+ALTER TABLE issued_people AUTO_INCREMENT = 1;

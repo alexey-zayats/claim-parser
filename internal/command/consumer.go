@@ -447,7 +447,7 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 					app.OtherReason,
 					app.WhoNeedsHelp,
 					app.WhoNeedsHelpPhone,
-					app.DocLinks,)
+					app.DocLinks)
 
 				if _, err := file.WriteString(line); err != nil {
 					logrus.Error(err)

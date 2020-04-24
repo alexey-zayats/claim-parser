@@ -64,7 +64,7 @@ func (s *SingleApplicationService) SaveRecord(a *application.Single) error {
 		company = &entity.Company{
 			OGRN:     a.Ogrn,
 			INN:      a.Inn,
-			Name:     a.CeoName,
+			Name:     fmt.Sprintf("Физическое лицо %s", a.CeoName),
 			BranchID: a.ActivityKind,
 			Status:   0,
 		}
