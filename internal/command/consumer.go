@@ -23,7 +23,9 @@ type Consumer struct {
 	queue   *queue.Queue
 	wg      *sync.WaitGroup
 	appChan chan interface{}
-	csvChan chan interface{}
+	vChan   chan *application.Vehicle
+	pChan   chan *application.People
+	sChan   chan *application.Single
 
 	vehicleSvc *services.VehicleApplicationService
 	peopleSvc  *services.PeopleApplicationService
@@ -51,7 +53,9 @@ func NewConsumer(di ConsumerDI) Command {
 		singleSvc:  di.SingleSvc,
 		wg:         &sync.WaitGroup{},
 		appChan:    make(chan interface{}, 1),
-		csvChan:    make(chan interface{}),
+		vChan:      make(chan *application.Vehicle),
+		pChan:      make(chan *application.People),
+		sChan:      make(chan *application.Single),
 	}
 }
 
@@ -100,12 +104,11 @@ func (c Consumer) addWorker(ctx context.Context, worker int) {
 			return
 		case face := <-c.appChan:
 
-			c.csvChan <- face
-
 			switch face.(type) {
 			case *application.Vehicle:
 
 				app := face.(*application.Vehicle)
+				c.vChan <- app
 
 				logrus.WithFields(logrus.Fields{
 					"company": app.Title,
@@ -123,6 +126,7 @@ func (c Consumer) addWorker(ctx context.Context, worker int) {
 			case *application.People:
 
 				app := face.(*application.People)
+				c.pChan <- app
 
 				logrus.WithFields(logrus.Fields{
 					"company": app.Title,
@@ -140,6 +144,7 @@ func (c Consumer) addWorker(ctx context.Context, worker int) {
 			case *application.Single:
 
 				app := face.(*application.Single)
+				c.sChan <- app
 
 				logrus.WithFields(logrus.Fields{
 					"company": app.Title,
@@ -320,33 +325,28 @@ func (c *Consumer) vehicleCSV(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case face := <-c.csvChan:
+		case app := <-c.vChan:
 
-			switch face.(type) {
-			case *application.Vehicle:
-				app := face.(*application.Vehicle)
+			for _, p := range app.Passes {
+				line := fmt.Sprintf("%v;%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+					app.Dirty,
+					app.DistrictID,
+					app.PassType,
+					app.Title,
+					app.Inn,
+					app.Ogrn,
+					app.CeoName,
+					app.CeoPhone,
+					app.CeoEmail,
+					p.Car,
+					p.Lastname,
+					p.Firstname,
+					p.Middlename,
+					app.ActivityKind,
+					app.Agreement,
+					app.Reliability)
 
-				for _, p := range app.Passes {
-					line := fmt.Sprintf("%v;%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
-						app.Dirty,
-						app.DistrictID,
-						app.PassType,
-						app.Title,
-						app.Inn,
-						app.Ogrn,
-						app.CeoName,
-						app.CeoPhone,
-						app.CeoEmail,
-						p.Car,
-						p.Lastname,
-						p.Firstname,
-						p.Middlename,
-						app.ActivityKind,
-						app.Agreement,
-						app.Reliability)
-
-					file.WriteString(line)
-				}
+				file.WriteString(line)
 			}
 
 		}
@@ -372,33 +372,27 @@ func (c *Consumer) peopleCSV(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case face := <-c.csvChan:
+		case app := <-c.pChan:
 
-			switch face.(type) {
-			case *application.Vehicle:
-				app := face.(*application.People)
+			for _, p := range app.Passes {
+				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+					app.DistrictID,
+					app.PassType,
+					app.Title,
+					app.Inn,
+					app.Ogrn,
+					app.CeoName,
+					app.CeoPhone,
+					app.CeoEmail,
+					p.Lastname,
+					p.Firstname,
+					p.Middlename,
+					app.ActivityKind,
+					app.Agreement,
+					app.Reliability)
 
-				for _, p := range app.Passes {
-					line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
-						app.DistrictID,
-						app.PassType,
-						app.Title,
-						app.Inn,
-						app.Ogrn,
-						app.CeoName,
-						app.CeoPhone,
-						app.CeoEmail,
-						p.Lastname,
-						p.Firstname,
-						p.Middlename,
-						app.ActivityKind,
-						app.Agreement,
-						app.Reliability)
-
-					file.WriteString(line)
-				}
+				file.WriteString(line)
 			}
-
 		}
 	}
 }
@@ -422,32 +416,27 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case face := <-c.csvChan:
+		case app := <-c.sChan:
 
-			switch face.(type) {
-			case *application.Vehicle:
-				app := face.(*application.Single)
+			for _, p := range app.Passes {
+				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+					app.DistrictID,
+					app.PassType,
+					app.Title,
+					app.Inn,
+					app.Ogrn,
+					app.CeoName,
+					app.CeoPhone,
+					app.CeoEmail,
+					p.Car,
+					p.Lastname,
+					p.Firstname,
+					p.Middlename,
+					app.ActivityKind,
+					app.Agreement,
+					app.Reliability)
 
-				for _, p := range app.Passes {
-					line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
-						app.DistrictID,
-						app.PassType,
-						app.Title,
-						app.Inn,
-						app.Ogrn,
-						app.CeoName,
-						app.CeoPhone,
-						app.CeoEmail,
-						p.Car,
-						p.Lastname,
-						p.Firstname,
-						p.Middlename,
-						app.ActivityKind,
-						app.Agreement,
-						app.Reliability)
-
-					file.WriteString(line)
-				}
+				file.WriteString(line)
 			}
 
 		}
