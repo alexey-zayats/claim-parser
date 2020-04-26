@@ -116,6 +116,8 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 		userID = routing.CleanID
 	}
 
+	t := time.Now()
+
 	bid := &entity.Bid{
 		CompanyID:       company.ID,
 		BranchID:        a.ActivityKind,
@@ -131,6 +133,8 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
 		CreatedBy:       userID,
+		DateFrom:        t,
+		DateTo:          t,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {
