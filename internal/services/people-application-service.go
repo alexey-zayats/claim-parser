@@ -135,7 +135,7 @@ func (s *PeopleApplicationService) SaveRecord(a *application.People) error {
 
 		p := &entity.PassPeople{
 			BidID:      bid.ID,
-			Source:     s.config.Pass.Source,
+			Source:     source.ID,
 			DistrictID: a.DistrictID,
 			PassType:   a.PassType,
 			Lastname:   pass.Lastname,

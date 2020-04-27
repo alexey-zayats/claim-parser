@@ -5,7 +5,7 @@ type PassPeople struct {
 	ID         int64  `db:"id"`
 	BidID      int64  `db:"bid_id"`
 	IssuedID   int64  `db:"issued_id"`
-	Source     int    `db:"source"`
+	Source     int64  `db:"source"`
 	DistrictID int64  `db:"district_id"`
 	PassType   int    `db:"pass_type"`
 	PassNumber string `db:"pass_number"`

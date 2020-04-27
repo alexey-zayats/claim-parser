@@ -161,7 +161,7 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 			Firstname:  pass.FIO.Firstname,
 			Patrname:   pass.FIO.Patronymic,
 			Car:        pass.Number,
-			Source:     event.Source,
+			Source:     source.ID,
 			DistrictID: event.DistrictID,
 			PassType:   event.PassType,
 			Status:     0,

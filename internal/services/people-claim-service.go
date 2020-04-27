@@ -154,7 +154,7 @@ func (s *PeopleClaimService) SaveRecord(event *model.Event, claim *model.PeopleC
 
 		p := &entity.PassPeople{
 			BidID:      bid.ID,
-			Source:     event.Source,
+			Source:     source.ID,
 			DistrictID: event.DistrictID,
 			PassType:   event.PassType,
 			Lastname:   pass.FIO.Lastname,

@@ -151,7 +151,7 @@ func (s *SingleApplicationService) SaveRecord(a *application.Single) error {
 
 		p := &entity.Pass{
 			BidID:      bid.ID,
-			Source:     s.config.Pass.Source,
+			Source:     source.ID,
 			DistrictID: a.DistrictID,
 			PassType:   a.PassType,
 			Car:        pass.Car,

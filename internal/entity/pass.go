@@ -13,7 +13,7 @@ type Pass struct {
 	Firstname  string    `db:"firstname"`
 	Patrname   string    `db:"patrname"`
 	Car        string    `db:"car"`
-	Source     int       `db:"source"`
+	Source     int64     `db:"source"`
 	DistrictID int64     `db:"district_id"`
 	PassType   int       `db:"pass_type"`
 	PassNumber string    `db:"pass_number"`
