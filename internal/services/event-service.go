@@ -87,7 +87,7 @@ func (s *EventService) vehicleClaim(event *model.Event, claim *model.VehicleClai
 	rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
 
 	if err := s.vcs.SaveRecord(event, claim); err != nil {
-		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
+		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save vehicle claim record")
 		log := rec + ";sql: " + err.Error()
 		s.UpdateFile(event.FileID, 3, log, claim.Source)
 		return

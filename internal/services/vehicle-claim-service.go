@@ -6,6 +6,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
+	"time"
 )
 
 // VehicleClaimService ...
@@ -127,6 +128,8 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		userID = routing.CleanID
 	}
 
+	t := time.Now()
+
 	bid := &entity.Bid{
 		CompanyID:       company.ID,
 		FileID:          event.FileID,
@@ -147,6 +150,8 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		Source:          claim.Source,
 		Agree:           1,
 		Confirm:         1,
+		DateFrom:        t,
+		DateTo:          t,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {
