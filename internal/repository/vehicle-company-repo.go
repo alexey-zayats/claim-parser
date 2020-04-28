@@ -127,7 +127,7 @@ func (r *VehicleCompanyRepo) Update(data *entity.Company) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
-		sql := "UPDATE companies_people " +
+		sql := "UPDATE companies " +
 			"SET " +
 			"ogrn = ?, inn = ?, name = ?, branch_id = ?, status = ? " +
 			"WHERE id = ?"
@@ -141,6 +141,8 @@ func (r *VehicleCompanyRepo) Update(data *entity.Company) error {
 			data.ID)
 
 		if err != nil {
+
+
 			return err
 		}
 
@@ -164,7 +166,7 @@ func (r *VehicleCompanyRepo) Read(id int64) (*entity.Company, error) {
 			"id, " +
 			"ogrn, inn, name, branch_id, status " +
 			"FROM " +
-			"companies_people " +
+			"companies " +
 			"WHERE " +
 			"id = ?"
 
@@ -181,7 +183,7 @@ func (r *VehicleCompanyRepo) Delete(id int64) error {
 
 	err := database.WithTransaction(r.db, func(t database.Transaction) error {
 
-		sql := "DELETE FROM passes WHERE id = ?"
+		sql := "DELETE FROM companies WHERE id = ?"
 		_, err := t.Exec(sql, id)
 		if err != nil {
 			return errors.Wrapf(err, "unable delete from companies_people by id %d", id)

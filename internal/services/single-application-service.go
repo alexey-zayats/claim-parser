@@ -71,23 +71,10 @@ func (s *SingleApplicationService) SaveRecord(a *application.Single) error {
 		if err = s.companySvc.Create(company); err != nil {
 			return errors.Wrapf(err, "unable create company")
 		}
-	} else {
-
-		update := false
-		if company.INN == 0 {
-			company.INN = a.Inn
-			update = true
-		}
-
-		if company.OGRN == 0 {
-			company.OGRN = a.Ogrn
-			update = true
-		}
-
-		if update {
-			if err = s.companySvc.Update(company); err != nil {
-				return errors.Wrapf(err, "unable update company")
-			}
+	} else if company.OGRN == 0 {
+		company.OGRN = a.Ogrn
+		if err = s.companySvc.Update(company); err != nil {
+			return errors.Wrapf(err, "unable update company")
 		}
 	}
 
