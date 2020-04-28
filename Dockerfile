@@ -15,7 +15,7 @@ FROM alpine
 
 COPY --from=builder /src/build/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /src/bin/claim-parser /app/claim-parser
-COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 ENV TZ=Europe/Moscow
 
