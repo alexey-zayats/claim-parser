@@ -15,6 +15,9 @@ FROM alpine
 
 COPY --from=builder /src/build/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /src/bin/claim-parser /app/claim-parser
+COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+
+ENV TZ=Europe/Moscow
 
 RUN apk -U --no-cache add bash ca-certificates \
     && chmod +x /app/claim-parser \
