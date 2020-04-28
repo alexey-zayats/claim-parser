@@ -5,6 +5,7 @@ import (
 	"github.com/alexey-zayats/claim-parser/internal/entity"
 	"github.com/alexey-zayats/claim-parser/internal/model"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
 	"time"
 )
@@ -88,19 +89,18 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		if err = s.companySvc.Create(company); err != nil {
 			return errors.Wrapf(err, "unable create company")
 		}
-	} else {
+	} else if company.OGRN == 0 {
 
-		if company.INN == 0 {
-			company.INN = claim.Company.TIN
-		}
-
-		if company.OGRN == 0 {
-			company.OGRN = claim.Company.PSRN
-		}
+		company.OGRN = claim.Company.PSRN
 
 		if err = s.companySvc.Update(company); err != nil {
 			return errors.Wrapf(err, "unable create company")
 		}
+	} else {
+		logrus.WithFields(logrus.Fields{
+			"inn":  company.INN,
+			"ogrn": company.OGRN,
+		}).Debug("company")
 	}
 
 	sourceName := "gsheet-vehicle"
