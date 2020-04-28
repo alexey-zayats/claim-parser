@@ -2,7 +2,7 @@ FROM golang:alpine as builder
 
 ENV GOROOT /usr/local/go
 
-RUN apk -U --no-cache add git make
+RUN apk -U --no-cache add git make tzdata
 
 ADD . /src
 WORKDIR /src
