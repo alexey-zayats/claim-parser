@@ -142,7 +142,6 @@ func (r *VehicleCompanyRepo) Update(data *entity.Company) error {
 
 		if err != nil {
 
-
 			return err
 		}
 
