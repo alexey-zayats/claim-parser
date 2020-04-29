@@ -63,7 +63,6 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 
 	i := 1
 	rows.Next()
-	rows.Next()
 
 	numStyle, _ := f.NewStyle(`{"number_format":1}`)
 	dateStyle, _ := f.NewStyle(`{"custom_number_format": "m.d.yyyy h:mm:ss"}`)
