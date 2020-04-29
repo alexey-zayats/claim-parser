@@ -13,4 +13,5 @@ type VehicleIssuedRepo interface {
 
 	FindByCar(car string) (*entity.Issued, error)
 	FindByPass(pass string) (*entity.Issued, error)
+	FindByRegistryNumber(registryNumber string) (*entity.Issued, error)
 }

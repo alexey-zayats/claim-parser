@@ -28,6 +28,25 @@ func NewVehicleIssuedRepo(param VehicleIssuedRepoDI) interfaces.VehicleIssuedRep
 	}
 }
 
+// FindByRegistryNumber ...
+func (r *VehicleIssuedRepo) FindByRegistryNumber(registryNumber string) (*entity.Issued, error) {
+	var record entity.Issued
+
+	err := r.db.Get(&record, "SELECT "+
+		"id, created_at, created_by, company_inn, company_ogrn, company_name, "+
+		"company_fio, company_car, legal_basement, pass_number, district, pass_type, issued_at, "+
+		"registry_number, file_id, shipping "+
+		"FROM issued where registry_number = ?", registryNumber)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "unable get issued record by registry_number %s", registryNumber)
+	}
+
+	return &record, nil
+}
+
 // FindByPass ...
 func (r *VehicleIssuedRepo) FindByPass(pass string) (*entity.Issued, error) {
 	var record entity.Issued

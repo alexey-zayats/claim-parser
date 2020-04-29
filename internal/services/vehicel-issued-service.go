@@ -35,17 +35,17 @@ func NewVehicleIssuedService(di VehicleIssuedServiceDI) *VehicleIssuedService {
 func (s *VehicleIssuedService) SaveRecord(event *model.Event, record *model.VehicleRegistry) error {
 
 	var issued *entity.Issued
-	//var err error
-	//var create bool
+	var err error
+	var create bool
 
-	//if issued, err = s.repo.FindByPass(record.PassNumber); err != nil {
-	//	return errors.Wrap(err, "unable find issued")
-	//}
+	if issued, err = s.repo.FindByRegistryNumber(record.RegistryNumber); err != nil {
+		return errors.Wrap(err, "unable find issued")
+	}
 
-	//if issued == nil {
-	//	create = true
-	issued = &entity.Issued{}
-	//}
+	if issued == nil {
+		create = true
+		issued = &entity.Issued{}
+	}
 
 	issued.FileID = event.FileID
 	issued.CreatedAt = time.Now()
@@ -63,27 +63,27 @@ func (s *VehicleIssuedService) SaveRecord(event *model.Event, record *model.Vehi
 	issued.RegistryNumber = record.RegistryNumber
 	issued.Shipping = record.Shipping
 
-	//if create {
-	if err := s.repo.Create(issued); err != nil {
+	if create {
+		if err := s.repo.Create(issued); err != nil {
 
-		logrus.WithFields(logrus.Fields{
-			"company": issued.CompanyName,
-			"car":     issued.CompanyCar,
-			"pass":    issued.PassNumber}).Error("registry")
+			logrus.WithFields(logrus.Fields{
+				"company": issued.CompanyName,
+				"car":     issued.CompanyCar,
+				"pass":    issued.PassNumber}).Error("registry")
 
-		return errors.Wrap(err, "unable create issued record")
+			return errors.Wrap(err, "unable create issued record")
+		}
+	} else {
+		if err := s.repo.Update(issued); err != nil {
+
+			logrus.WithFields(logrus.Fields{
+				"company": issued.CompanyName,
+				"car":     issued.CompanyCar,
+				"pass":    issued.PassNumber}).Error("registry")
+
+			return errors.Wrap(err, "unable Update issued record")
+		}
 	}
-	//} else {
-	//	if err := s.repo.Update(issued); err != nil {
-	//
-	//		logrus.WithFields(logrus.Fields{
-	//			"company": issued.CompanyName,
-	//			"car":     issued.CompanyCar,
-	//			"pass":    issued.PassNumber}).Error("registry")
-	//
-	//		return errors.Wrap(err, "unable Update issued record")
-	//	}
-	//}
 
 	if len(issued.CompanyCar) > 0 {
 
