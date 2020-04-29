@@ -91,7 +91,7 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 			}
 
 			f.SetCellStyle(sheetName, axis["issued-at"], axis["issued-at"], dateStyle)
-			f.SetCellStyle(sheetName, axis["inn"], axis["inn"], numStyle)
+			//f.SetCellStyle(sheetName, axis["inn"], axis["inn"], numStyle)
 			f.SetCellStyle(sheetName, axis["ogrn"], axis["ogrn"], numStyle)
 
 			var legalBasement string

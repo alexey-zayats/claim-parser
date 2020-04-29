@@ -71,7 +71,7 @@ func (s *PeopleApplicationService) SaveRecord(a *application.People) error {
 		if err = s.companySvc.Create(company); err != nil {
 			return errors.Wrapf(err, "unable create company")
 		}
-	} else if company.OGRN == 0 {
+	} else if len(company.OGRN) == 0 {
 		company.OGRN = a.Ogrn
 		if err = s.companySvc.Update(company); err != nil {
 			return errors.Wrapf(err, "unable update company")

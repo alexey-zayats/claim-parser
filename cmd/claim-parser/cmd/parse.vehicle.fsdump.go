@@ -37,6 +37,8 @@ func fsdumpMain(cmd *cobra.Command, args []string) {
 			"repository.VehicleCompanyRepo":  repository.NewVehicleCompanyRepo,
 			"repository.BranchRepository":    repository.NewBranchRepository,
 			"repository.FileRepository":      repository.NewFileRepository,
+			"repository.SourceRepository":    repository.NewSourceRepository,
+			"repository.RoutingRepository":   repository.NewRoutingRepository,
 			"service.VehiclePassService":     services.NewVehiclePassService,
 			"service.VehicleBidService":      services.NewVehicleBidService,
 			"services.VehicleClaimService":   services.NewVehicleClaimService,
@@ -44,6 +46,8 @@ func fsdumpMain(cmd *cobra.Command, args []string) {
 			"services.VehicleCompanyService": services.NewVehicleCompanyService,
 			"services.FileService":           services.NewFileService,
 			"services.BranchService":         services.NewBranchService,
+			"services.SourceService":         services.NewSourceService,
+			"services.RoutingService":        services.NewRoutingService,
 			"command.Parser":                 command.NewVehicleFSDumpParser,
 		},
 		Invoke: func(ctx context.Context, args []string) interface{} {

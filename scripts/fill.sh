@@ -7,7 +7,6 @@ for file in $(ls -1 ../data/excel/); do
 ./scripts/test.sh parse vehicle xlsx --path ../data/excel/$file
 done
 
-
 for file in $(ls -1 ../data/fs/); do
 ./scripts/test.sh parse vehicle formstruct --path ../data/fs/$file
 done

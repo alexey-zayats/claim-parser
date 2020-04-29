@@ -21,10 +21,8 @@ type Company struct {
 	// Address адрес ЮЛ
 	Address string
 
-	// TIN - ИНН
-	TIN int64
-	// PSRN - ОГРН
-	PSRN int64
+	INN  string
+	OGRN string
 
 	// ФИО директора
 	HeadName string

@@ -25,17 +25,17 @@ func NewVehicleCompanyService(di VehicleCompanyServiceDI) *VehicleCompanyService
 }
 
 // FindByOgrnInn ...
-func (s *VehicleCompanyService) FindByOgrnInn(ogrn int64, inn int64) (*entity.Company, error) {
+func (s *VehicleCompanyService) FindByOgrnInn(ogrn, inn string) (*entity.Company, error) {
 	return s.repo.FindByOgrnInn(ogrn, inn)
 }
 
 // FindByINN ...
-func (s *VehicleCompanyService) FindByINN(inn int64) (*entity.Company, error) {
+func (s *VehicleCompanyService) FindByINN(inn string) (*entity.Company, error) {
 	return s.repo.FindByINN(inn)
 }
 
 // FindByOGRN ...
-func (s *VehicleCompanyService) FindByOGRN(ogrn int64) (*entity.Company, error) {
+func (s *VehicleCompanyService) FindByOGRN(ogrn string) (*entity.Company, error) {
 	return s.repo.FindByOGRN(ogrn)
 }
 

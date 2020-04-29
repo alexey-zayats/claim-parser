@@ -119,29 +119,18 @@ func (p *PeopleParser) Parse(ctx context.Context, out chan *model.Out) error {
 			claim.Agreement = util.TrimSpaces(f.GetCellValue(sheetName, axis["agreement"]))
 			claim.Reliability = util.TrimSpaces(f.GetCellValue(sheetName, axis["reliability"]))
 
-			if claim.Company.TIN, ok = parser.ParseInt64(f.GetCellValue(sheetName, axis["company-inn"])); ok == false {
-				claim.Reason = append(claim.Reason, "ИНН не является числом")
+			claim.Company.INN = util.TrimSpaces(f.GetCellValue(sheetName, axis["company-inn"]))
+			d1 := len(claim.Company.INN)
+			if d1 < 10 || d1 > 12 {
+				claim.Reason = append(claim.Reason, fmt.Sprintf("ИНН содержит %d цифр", d1))
 				claim.Success = false
 			}
 
-			d := util.DigitsCount(claim.Company.TIN)
-			if d < 10 || d > 12 {
-				claim.Reason = append(claim.Reason, fmt.Sprintf("ИНН содержит %d цифр", d))
+			claim.Company.OGRN = util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"]))
+			d2 := len(claim.Company.OGRN)
+			if d2 < 13 || d2 > 15 {
+				claim.Reason = append(claim.Reason, fmt.Sprintf("ОРГН содержит %d цифр", d2))
 				claim.Success = false
-			}
-
-			ogrn := util.TrimSpaces(f.GetCellValue(sheetName, axis["ogrn"]))
-			if len(ogrn) > 0 {
-				if claim.Company.PSRN, ok = parser.ParseInt64(f.GetCellValue(sheetName, axis["ogrn"])); ok == false {
-					claim.Reason = append(claim.Reason, "поле ОРГ не является числом")
-					claim.Success = false
-				}
-
-				d = util.DigitsCount(claim.Company.PSRN)
-				if d < 13 || d > 15 {
-					claim.Reason = append(claim.Reason, fmt.Sprintf("ОРГН содержит %d цифр", d))
-					claim.Success = false
-				}
 			}
 
 			out <- &model.Out{

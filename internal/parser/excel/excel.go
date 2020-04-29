@@ -73,12 +73,8 @@ func (p *Parser) Parse(ctx context.Context, out chan *model.Out) error {
 		Success:     true,
 	}
 
-	if claim.Company.TIN, ok = parser.ParseInt64(util.TrimSpaces(f.GetCellValue(sheetName, "B8"))); ok == false {
-		claim.Reason = append(claim.Reason, "ИНН не является числом")
-		claim.Success = false
-	}
-
-	tdig := util.DigitsCount(claim.Company.TIN)
+	claim.Company.INN = util.TrimSpaces(f.GetCellValue(sheetName, "B8"))
+	tdig := len(claim.Company.INN)
 	if tdig < 10 || tdig > 12 {
 		claim.Reason = append(claim.Reason, "ИНН меньше 10 или больше 12 знаков")
 		claim.Success = false

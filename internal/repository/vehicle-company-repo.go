@@ -29,7 +29,7 @@ func NewVehicleCompanyRepo(di VehicleCompanyRepoDI) interfaces.VehicleCompanyRep
 }
 
 // FindByOgrnInn ...
-func (r *VehicleCompanyRepo) FindByOgrnInn(ogrn, inn int64) (*entity.Company, error) {
+func (r *VehicleCompanyRepo) FindByOgrnInn(ogrn, inn string) (*entity.Company, error) {
 	var record entity.Company
 
 	query :=
@@ -49,7 +49,7 @@ func (r *VehicleCompanyRepo) FindByOgrnInn(ogrn, inn int64) (*entity.Company, er
 }
 
 // FindByINN ...
-func (r *VehicleCompanyRepo) FindByINN(inn int64) (*entity.Company, error) {
+func (r *VehicleCompanyRepo) FindByINN(inn string) (*entity.Company, error) {
 	var record entity.Company
 
 	query := "SELECT id, ogrn, inn, name, branch_id, status " +
@@ -67,7 +67,7 @@ func (r *VehicleCompanyRepo) FindByINN(inn int64) (*entity.Company, error) {
 }
 
 // FindByOGRN ...
-func (r *VehicleCompanyRepo) FindByOGRN(ogrn int64) (*entity.Company, error) {
+func (r *VehicleCompanyRepo) FindByOGRN(ogrn string) (*entity.Company, error) {
 	var record entity.Company
 
 	query := "SELECT " +

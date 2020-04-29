@@ -7,8 +7,8 @@ type Vehicle struct {
 	PassType     int
 	Title        string
 	Address      string
-	Inn          int64
-	Ogrn         int64
+	Inn          string
+	Ogrn         string
 	CeoName      string
 	CeoPhone     string
 	CeoEmail     string

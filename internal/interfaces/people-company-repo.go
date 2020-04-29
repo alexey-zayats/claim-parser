@@ -11,7 +11,7 @@ type PeopleCompanyRepo interface {
 	Update(people *entity.CompanyPeople) error
 	Delete(id int64) error
 
-	FindByINN(inn int64) (*entity.CompanyPeople, error)
-	FindByOGRN(inn int64) (*entity.CompanyPeople, error)
-	FindByOgrnInn(ogrn, inn int64) (*entity.CompanyPeople, error)
+	FindByINN(inn string) (*entity.CompanyPeople, error)
+	FindByOGRN(ogrn string) (*entity.CompanyPeople, error)
+	FindByOgrnInn(ogrn, inn string) (*entity.CompanyPeople, error)
 }

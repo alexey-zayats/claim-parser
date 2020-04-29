@@ -52,9 +52,10 @@ func (cmd *VehicleFSParser) Run(ctx context.Context, args []string) error {
 	}
 
 	backend.WithEvent(&model.Event{
-		Filepath:  cmd.config.Parser.Path,
-		CreatedBy: 1,
-		PassType:  1,
+		Filepath:   cmd.config.Parser.Path,
+		CreatedBy:  1,
+		PassType:   1,
+		DistrictID: 1,
 	})
 
 	cmd.wg.Add(1)
@@ -89,7 +90,7 @@ func (cmd *VehicleFSParser) HandleParsed(ctx context.Context) {
 				}
 				fmt.Printf("%s\n", string(data))
 				if claim.Success == false {
-					fmt.Printf("%s;%d;%s;parse: %s\n", claim.Created, claim.Company.TIN, claim.Company.Title, strings.Join(claim.Reason, ", "))
+					fmt.Printf("%s;%s;%s;parse: %s\n", claim.Created, claim.Company.INN, claim.Company.Title, strings.Join(claim.Reason, ", "))
 				}
 				return
 			default:

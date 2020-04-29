@@ -53,7 +53,7 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 	var err error
 	var company *entity.Company = nil
 
-	company, err = s.companySvc.FindByINN(claim.Company.TIN)
+	company, err = s.companySvc.FindByINN(claim.Company.INN)
 	if err != nil {
 		return errors.Wrapf(err, "unable find company by OGRN & INN")
 	}
@@ -79,8 +79,8 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 
 	if company == nil {
 		company = &entity.Company{
-			OGRN:     claim.Company.PSRN,
-			INN:      claim.Company.TIN,
+			OGRN:     claim.Company.OGRN,
+			INN:      claim.Company.INN,
 			Name:     claim.Company.Title,
 			BranchID: branchID,
 			Status:   0,
@@ -88,9 +88,9 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		if err = s.companySvc.Create(company); err != nil {
 			return errors.Wrapf(err, "unable create company")
 		}
-	} else if company.OGRN == 0 {
+	} else if len(company.OGRN) == 0 {
 
-		company.OGRN = claim.Company.PSRN
+		company.OGRN = claim.Company.OGRN
 
 		if err = s.companySvc.Update(company); err != nil {
 			return errors.Wrapf(err, "unable create company")

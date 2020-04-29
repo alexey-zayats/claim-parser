@@ -73,10 +73,11 @@ func (cmd *VehicleIssuedParser) Run(ctx context.Context, args []string) error {
 	}
 
 	backend.WithEvent(&model.Event{
-		FileID:    cmd.file.ID,
-		Filepath:  cmd.config.Parser.Path,
-		CreatedBy: 1,
-		PassType:  1,
+		FileID:     cmd.file.ID,
+		Filepath:   cmd.config.Parser.Path,
+		CreatedBy:  1,
+		PassType:   1,
+		DistrictID: 1,
 	})
 
 	cmd.wg.Add(1)

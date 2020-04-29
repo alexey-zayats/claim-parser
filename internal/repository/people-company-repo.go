@@ -29,7 +29,7 @@ func NewPeopleCompanyRepo(param PeopleCompanyRepoInput) interfaces.PeopleCompany
 }
 
 // FindByOgrnInn ...
-func (r *PeopleCompanyRepo) FindByOgrnInn(ogrn, inn int64) (*entity.CompanyPeople, error) {
+func (r *PeopleCompanyRepo) FindByOgrnInn(ogrn, inn string) (*entity.CompanyPeople, error) {
 	var record entity.CompanyPeople
 
 	query :=
@@ -49,7 +49,7 @@ func (r *PeopleCompanyRepo) FindByOgrnInn(ogrn, inn int64) (*entity.CompanyPeopl
 }
 
 // FindByINN ...
-func (r *PeopleCompanyRepo) FindByINN(inn int64) (*entity.CompanyPeople, error) {
+func (r *PeopleCompanyRepo) FindByINN(inn string) (*entity.CompanyPeople, error) {
 	var record entity.CompanyPeople
 
 	query := "SELECT id, ogrn, inn, name, branch_id, status " +
@@ -67,7 +67,7 @@ func (r *PeopleCompanyRepo) FindByINN(inn int64) (*entity.CompanyPeople, error) 
 }
 
 // FindByOGRN ...
-func (r *PeopleCompanyRepo) FindByOGRN(ogrn int64) (*entity.CompanyPeople, error) {
+func (r *PeopleCompanyRepo) FindByOGRN(ogrn string) (*entity.CompanyPeople, error) {
 	var record entity.CompanyPeople
 
 	query := "SELECT " +

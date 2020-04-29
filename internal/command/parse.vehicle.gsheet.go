@@ -72,10 +72,11 @@ func (cmd *VehicleGSheetParser) Run(ctx context.Context, args []string) error {
 	}
 
 	backend.WithEvent(&model.Event{
-		FileID:    cmd.file.ID,
-		Filepath:  cmd.config.Parser.Path,
-		CreatedBy: 1,
-		PassType:  1,
+		FileID:     cmd.file.ID,
+		Filepath:   cmd.config.Parser.Path,
+		CreatedBy:  1,
+		PassType:   1,
+		DistrictID: 1,
 	})
 
 	cmd.wg.Add(1)
@@ -102,7 +103,7 @@ func (cmd *VehicleGSheetParser) HandleParsed(ctx context.Context) {
 			case model.OutVehicleClaim:
 
 				claim := out.Value.(*model.VehicleClaim)
-				rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
+				rec := fmt.Sprintf("%s;%s;%s", claim.Created, claim.Company.INN, claim.Company.Title)
 
 				logrus.WithFields(logrus.Fields{"company": claim.Company.Title}).Debug("claim")
 

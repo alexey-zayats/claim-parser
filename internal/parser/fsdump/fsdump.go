@@ -170,14 +170,10 @@ func (p *Parser) makeClaim(created string, lines []string) (*model.VehicleClaim,
 			claim.Company.Address = value
 		case fs.StateINN:
 
-			if claim.Company.TIN, ok = parser.ParseInt64(value); ok == false {
-				claim.Reason = append(claim.Reason, "ИНН не является числом")
-				claim.Success = false
-			}
-
-			d := util.DigitsCount(claim.Company.TIN)
-			if d < 10 || d > 12 {
-				claim.Reason = append(claim.Reason, fmt.Sprintf("ИНН содержит %d цифр", d))
+			claim.Company.INN = util.TrimSpaces(value)
+			tdig := len(claim.Company.INN)
+			if tdig < 10 || tdig > 12 {
+				claim.Reason = append(claim.Reason, "ИНН меньше 10 или больше 12 знаков")
 				claim.Success = false
 			}
 

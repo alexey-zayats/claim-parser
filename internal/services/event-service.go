@@ -67,7 +67,7 @@ func (s *EventService) peopleClaim(event *model.Event, claim *model.PeopleClaim)
 		"email":    claim.Company.HeadEmail,
 	}).Debug("People.Claim")
 
-	rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
+	rec := fmt.Sprintf("%s;%s;%s", claim.Created, claim.Company.INN, claim.Company.Title)
 
 	if err := s.pcs.SaveRecord(event, claim); err != nil {
 		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save people claim record")
@@ -84,7 +84,7 @@ func (s *EventService) vehicleClaim(event *model.Event, claim *model.VehicleClai
 		"district": event.DistrictID,
 	}).Debug("Vehicle.Claim")
 
-	rec := fmt.Sprintf("%s;%d;%s", claim.Created, claim.Company.TIN, claim.Company.Title)
+	rec := fmt.Sprintf("%s;%s;%s", claim.Created, claim.Company.INN, claim.Company.Title)
 
 	if err := s.vcs.SaveRecord(event, claim); err != nil {
 		logrus.WithFields(logrus.Fields{"reason": err}).Error("unable save vehicle claim record")
