@@ -137,6 +137,7 @@ func (s *PeopleClaimService) SaveRecord(event *model.Event, claim *model.PeopleC
 		PassType:        event.PassType,
 		Source:          claim.Source,
 		CreatedAt:       claim.Created,
+		CreatedBy:       event.CreatedBy,
 		MovedTo:         userID,
 	}
 

@@ -38,7 +38,7 @@ func (r *VehicleBidRepo) Create(data *entity.Bid) error {
 			"company_ceo_email, company_ceo_name," +
 			"agree, confirm, " +
 			"workflow_status, code, district_id, pass_type, " +
-			"created_at, user_id, source, " + // created_by,
+			"created_at, created_by, source, " + // user_id,
 			"city, who_address, phone_where, fio_where, city_where, " +
 			"address_where, `from`, `to`, reason, link" +
 			") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" // , ?
