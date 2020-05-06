@@ -119,9 +119,10 @@ func (s *VehicleApplicationService) SaveRecord(a *application.Vehicle) error {
 		DistrictID:      a.DistrictID,
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
-		CreatedBy:       userID,
-		DateFrom:        t,
-		DateTo:          t,
+		//CreatedBy:       userID,
+		MovedTo:  userID,
+		DateFrom: t,
+		DateTo:   t,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {

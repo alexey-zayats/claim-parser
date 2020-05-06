@@ -140,12 +140,13 @@ func (s *VehicleClaimService) SaveRecord(event *model.Event, claim *model.Vehicl
 		PassType:        event.PassType,
 		CreatedAt:       claim.Created,
 		CreatedBy:       event.CreatedBy,
-		UserID:          userID,
-		Source:          claim.Source,
-		Agree:           1,
-		Confirm:         1,
-		DateFrom:        t,
-		DateTo:          t,
+		//UserID:          event.CreatedBy,
+		MovedTo:  userID,
+		Source:   claim.Source,
+		Agree:    1,
+		Confirm:  1,
+		DateFrom: t,
+		DateTo:   t,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {

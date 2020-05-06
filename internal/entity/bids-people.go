@@ -21,7 +21,7 @@ type BidPeople struct {
 	PassType        int       `db:"pass_type"`
 	Source          string    `db:"source"`
 	UserID          int64     `db:"user_id"`
-	MovedTo         int       `db:"moved_to"`
+	MovedTo         int64     `db:"moved_to"`
 	AlighnedID      int       `db:"alighned_id"`
 	PrintID         int       `db:"print_id"`
 	CreatedAt       time.Time `db:"created_at"`

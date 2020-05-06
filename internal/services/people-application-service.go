@@ -111,7 +111,7 @@ func (s *PeopleApplicationService) SaveRecord(a *application.People) error {
 		DistrictID:      a.DistrictID,
 		PassType:        a.PassType,
 		CreatedAt:       time.Now(),
-		CreatedBy:       userID,
+		MovedTo:         userID,
 	}
 
 	if err := s.bidSvc.Create(bid); err != nil {
