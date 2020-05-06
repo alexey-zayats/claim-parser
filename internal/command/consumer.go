@@ -328,7 +328,7 @@ func (c *Consumer) vehicleCSV(ctx context.Context) {
 		case app := <-c.vChan:
 
 			for _, p := range app.Passes {
-				line := fmt.Sprintf("%v;%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+				line := fmt.Sprintf("%v;%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
 					app.Dirty,
 					app.DistrictID,
 					app.PassType,
@@ -377,7 +377,7 @@ func (c *Consumer) peopleCSV(ctx context.Context) {
 		case app := <-c.pChan:
 
 			for _, p := range app.Passes {
-				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
+				line := fmt.Sprintf("%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d\n",
 					app.DistrictID,
 					app.PassType,
 					app.Title,
@@ -423,7 +423,7 @@ func (c *Consumer) singleCSV(ctx context.Context) {
 		case app := <-c.sChan:
 
 			for _, p := range app.Passes {
-				line := fmt.Sprintf("%d;%d;%s;%d;%d;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
+				line := fmt.Sprintf("%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%d;%d;%d;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
 					app.DistrictID,
 					app.PassType,
 					app.Title,
